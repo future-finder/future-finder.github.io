@@ -1,0 +1,24 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+const showDrafts = import.meta.env.DEV;
+const blogs = (await getCollection('blog')).filter((x) => showDrafts || !x.data.draft);
+const notes = (await getCollection('notes')).filter((x) => showDrafts || !x.data.draft);
+const projects = await getCollection('projects');
+const counts = new Map<string, number>();
+[...blogs, ...notes, ...projects].forEach((entry) => entry.data.tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
+const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+<BaseLayout title="Tags | Hongyuan Zhang" description="按关键词浏览研究、写作、笔记和项目。">
+  <header class="page-hero shell"><span class="eyebrow">TAGS / INDEX</span><h1>Topics across the workbench.</h1><p>标签连接文章、研究笔记和项目；分类负责主题，标签负责横向关系。</p></header>
+  <section class="section"><div class="shell tags-grid">{tags.map(([tag, count], index) => <a href={`${import.meta.env.BASE_URL}tags/${encodeURIComponent(tag)}/`}><span>{String(index + 1).padStart(2, '0')}</span><strong>{tag}</strong><small>{count}</small></a>)}</div></section>
+</BaseLayout>
+<style>
+  .tags-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+  .tags-grid a { min-height: 120px; padding: 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transition: background .2s; }
+  .tags-grid a:hover { background: var(--accent-soft); }
+  .tags-grid span, .tags-grid small { color: var(--muted); font: 9px/1 var(--font-mono); }
+  .tags-grid strong { align-self: end; font-size: 1.05rem; }
+  @media (max-width: 720px) { .tags-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 440px) { .tags-grid { grid-template-columns: 1fr; } }
+</style>

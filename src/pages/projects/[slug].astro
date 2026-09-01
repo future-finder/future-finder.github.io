@@ -1,0 +1,21 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '@/layouts/PostLayout.astro';
+import { statusLabels } from '@/utils/content';
+export async function getStaticPaths() {
+  return (await getCollection('projects')).map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+const { project } = Astro.props;
+const { Content, headings } = await render(project);
+const links = Object.entries(project.data.links || {}).filter(([, href]) => Boolean(href));
+---
+<PostLayout title={project.data.title} description={project.data.description} category={`${project.data.type}${project.data.year ? ` · ${project.data.year}` : ''} · ${statusLabels[project.data.status]}`} tags={project.data.tags} minutes={2} headings={headings}>
+  <Content />
+  {links.length > 0 && <div class="project-links"><h2>Links</h2>{links.map(([label, href]) => <a href={href} target="_blank" rel="noreferrer">{label} ↗</a>)}</div>}
+</PostLayout>
+
+<style>
+  .project-links { display: flex; flex-wrap: wrap; gap: 12px; }
+  .project-links h2 { width: 100%; }
+  .project-links a { padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; text-transform: capitalize; }
+</style>

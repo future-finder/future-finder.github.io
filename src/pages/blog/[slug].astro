@@ -1,0 +1,20 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '@/layouts/PostLayout.astro';
+import { readingTime } from '@/utils/content';
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog')).filter((post) => import.meta.env.DEV || !post.data.draft).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      previous: posts[index - 1] ? { title: posts[index - 1].data.title, href: `${import.meta.env.BASE_URL}blog/${posts[index - 1].id}/` } : undefined,
+      next: posts[index + 1] ? { title: posts[index + 1].data.title, href: `${import.meta.env.BASE_URL}blog/${posts[index + 1].id}/` } : undefined,
+      related: posts.filter((candidate) => candidate.id !== post.id && candidate.data.tags.some((tag) => post.data.tags.includes(tag))).slice(0, 3).map((candidate) => ({ title: candidate.data.title, href: `${import.meta.env.BASE_URL}blog/${candidate.id}/`, category: candidate.data.category })),
+    },
+  }));
+}
+const { post, previous, next, related } = Astro.props;
+const { Content, headings } = await render(post);
+---
+<PostLayout title={post.data.title} description={post.data.description} date={post.data.date} updated={post.data.updated} category={post.data.category} tags={post.data.tags} minutes={readingTime(post.body || '')} draft={post.data.draft} headings={headings} previous={previous} next={next} related={related}><Content /></PostLayout>

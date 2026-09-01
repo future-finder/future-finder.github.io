@@ -1,0 +1,26 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate, readingTime } from '@/utils/content';
+interface Props { post: CollectionEntry<'blog'>; compact?: boolean; }
+const { post, compact = false } = Astro.props;
+---
+<article class:list={['post-card', { compact }]} data-pagefind-body>
+  <div class="post-meta"><span>{post.data.category}</span><time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time><span>{readingTime(post.body || '')} min</span>{post.data.draft && <b>DRAFT</b>}</div>
+  <h3 data-pagefind-meta="title"><a href={`${import.meta.env.BASE_URL}blog/${post.id}/`}>{post.data.title}</a></h3>
+  <p data-pagefind-meta="description">{post.data.description}</p>
+  <div class="post-bottom"><div class="tag-list">{post.data.tags.slice(0, 4).map((tag) => <a class="tag" href={`${import.meta.env.BASE_URL}tags/${encodeURIComponent(tag)}/`}>{tag}</a>)}</div><a class="arrow" href={`${import.meta.env.BASE_URL}blog/${post.id}/`} aria-label={`阅读：${post.data.title}`}>↗</a></div>
+</article>
+<style>
+  .post-card { padding: 28px 0; border-top: 1px solid var(--line); }
+  .post-meta { display: flex; gap: 16px; align-items: center; color: var(--muted); font: 9px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .07em; }
+  .post-meta span:first-child { color: var(--accent); }
+  .post-meta b { padding: 4px 6px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  h3 { margin: 18px 0 10px; max-width: 800px; font-size: clamp(1.35rem, 2.8vw, 2.2rem); line-height: 1.2; letter-spacing: -.035em; font-weight: 560; }
+  h3 a:hover { color: var(--accent); }
+  p { margin: 0; max-width: 720px; color: var(--muted); font-size: .93rem; }
+  .post-bottom { margin-top: 22px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+  .arrow { font-size: 1.2rem; color: var(--muted); }
+  .arrow:hover { color: var(--accent); }
+  .compact h3 { font-size: 1.35rem; }
+  .compact p { max-width: 580px; }
+</style>

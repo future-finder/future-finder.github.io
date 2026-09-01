@@ -1,0 +1,99 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Navbar from '@/components/Navbar.astro';
+import Footer from '@/components/Footer.astro';
+import SearchPalette from '@/components/SearchPalette.astro';
+import { siteConfig } from '@/data/site';
+import { social } from '@/data/social';
+import '@/styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article' | 'profile';
+  published?: Date;
+  updated?: Date;
+}
+
+const {
+  title = siteConfig.title,
+  description = siteConfig.description,
+  type = 'website',
+  published,
+  updated,
+} = Astro.props;
+const canonical = siteConfig.siteUrl ? new URL(Astro.url.pathname, siteConfig.siteUrl).toString() : '';
+const schema = type === 'profile'
+  ? { '@context': 'https://schema.org', '@type': 'ProfilePage', name: title, description, ...(canonical ? { url: canonical } : {}) }
+  : type === 'article'
+    ? { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: title, description, ...(canonical ? { url: canonical, mainEntityOfPage: canonical } : {}), ...(published ? { datePublished: published.toISOString() } : {}), ...(updated ? { dateModified: updated.toISOString() } : {}) }
+    : { '@context': 'https://schema.org', '@type': 'WebSite', name: siteConfig.title, description, ...(siteConfig.siteUrl ? { url: siteConfig.siteUrl } : {}) };
+const schemaJson = JSON.stringify(schema).replaceAll('<', '\\u003c');
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f6f6f3" />
+    <meta property="og:type" content={type === 'article' ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="Hongyuan Zhang" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    {social.rss && <link rel="alternate" type="application/rss+xml" title="Hongyuan Zhang RSS" href={social.rss} />}
+    <title>{title}</title>
+    <script is:inline type="application/ld+json" set:html={schemaJson} />
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem('theme') || 'system';
+        const dark = saved === 'dark' || (saved === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.themePreference = saved;
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <Navbar />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+    <SearchPalette />
+    <button class="back-top" type="button" aria-label="返回页面顶部" data-back-top>↑</button>
+    <script>
+      let globalController: AbortController | undefined;
+      const bindGlobal = () => {
+        globalController?.abort();
+        globalController = new AbortController();
+        const { signal } = globalController;
+        const backTop = document.querySelector<HTMLElement>('[data-back-top]');
+        if (!backTop) return;
+        const update = () => backTop.toggleAttribute('data-visible', scrollY > 700);
+        addEventListener('scroll', update, { passive: true, signal });
+        backTop.addEventListener('click', () => scrollTo({ top: 0, behavior: 'smooth' }), { signal });
+        update();
+      };
+      bindGlobal();
+      document.addEventListener('astro:page-load', bindGlobal);
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .skip-link { position: fixed; left: 16px; top: -60px; z-index: 200; padding: 10px 14px; background: var(--ink); color: var(--canvas); border-radius: 6px; transition: top .2s; }
+  .skip-link:focus { top: 16px; }
+  .back-top { position: fixed; right: 22px; bottom: 22px; z-index: 40; width: 42px; height: 42px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--muted); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(10px); transition: opacity .2s, transform .2s, color .2s; }
+  .back-top[data-visible] { opacity: 1; pointer-events: auto; transform: none; }
+  .back-top:hover { color: var(--accent); }
+  @view-transition { navigation: auto; }
+</style>

@@ -1,0 +1,27 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PostCard from '@/components/PostCard.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+export async function getStaticPaths() {
+  const showDrafts = import.meta.env.DEV;
+  const blogs = (await getCollection('blog')).filter((x) => showDrafts || !x.data.draft);
+  const notes = (await getCollection('notes')).filter((x) => showDrafts || !x.data.draft);
+  const projects = await getCollection('projects');
+  const tags = [...new Set([...blogs, ...notes, ...projects].flatMap((entry) => entry.data.tags))];
+  return tags.map((tag) => ({ params: { tag }, props: { tag, blogs: blogs.filter((x) => x.data.tags.includes(tag)), notes: notes.filter((x) => x.data.tags.includes(tag)), projects: projects.filter((x) => x.data.tags.includes(tag)) } }));
+}
+const { tag, blogs, notes, projects } = Astro.props;
+---
+<BaseLayout title={`${tag} | Tags | Hongyuan Zhang`} description={`与 ${tag} 相关的文章、笔记和项目。`}>
+  <header class="page-hero shell"><span class="eyebrow">TAG / FILTER</span><h1>#{tag}</h1><p>{blogs.length + notes.length + projects.length} 条相关记录。</p></header>
+  <section class="section"><div class="shell"><h2 class="group-title">Writing</h2>{blogs.length ? blogs.map((post: any) => <PostCard post={post} compact />) : <p class="muted">暂无相关文章。</p>}</div></section>
+  {projects.length > 0 && <section class="section"><div class="shell"><h2 class="group-title">Projects</h2><div class="projects-grid">{projects.map((project: any) => <ProjectCard project={project} />)}</div></div></section>}
+  {notes.length > 0 && <section class="section"><div class="shell"><h2 class="group-title">Notes</h2>{notes.map((note: any) => <a class="note-link" href={`${import.meta.env.BASE_URL}notes/${note.id}/`}>{note.data.title}<span>↗</span></a>)}</div></section>}
+</BaseLayout>
+<style>
+  .group-title { padding-bottom: 16px; border-bottom: 1px solid var(--ink); font-size: 1rem; text-transform: uppercase; letter-spacing: .08em; }
+  .projects-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .note-link { display: flex; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  @media (max-width: 700px) { .projects-grid { grid-template-columns: 1fr; } }
+</style>

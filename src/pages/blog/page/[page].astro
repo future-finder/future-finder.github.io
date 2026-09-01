@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PostCard from '@/components/PostCard.astro';
+export async function getStaticPaths() {
+  const posts = (await getCollection('blog')).filter((post) => import.meta.env.DEV || !post.data.draft).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+  const totalPages = Math.ceil(posts.length / 8);
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) => {
+    const page = index + 2;
+    return { params: { page: String(page) }, props: { posts: posts.slice((page - 1) * 8, page * 8), page, totalPages } };
+  });
+}
+const { posts, page, totalPages } = Astro.props;
+const previousHref = page === 2 ? `${import.meta.env.BASE_URL}blog/` : `${import.meta.env.BASE_URL}blog/page/${page - 1}/`;
+const nextHref = page < totalPages ? `${import.meta.env.BASE_URL}blog/page/${page + 1}/` : '';
+---
+<BaseLayout title={`Writing · Page ${page} | Hongyuan Zhang`} description="研究、论文阅读、算法与工程写作。">
+  <header class="page-hero shell"><span class="eyebrow">WRITING / PAGE {String(page).padStart(2, '0')}</span><h1>Writing archive.</h1><p>按发布时间排列的研究与工程写作。</p></header>
+  <section class="section"><div class="shell list">{posts.map((post: any) => <PostCard post={post} />)}<nav class="pager" aria-label="文章分页"><a href={previousHref}>← Previous</a><span>{String(page).padStart(2, '0')} / {String(totalPages).padStart(2, '0')}</span>{nextHref ? <a href={nextHref}>Next →</a> : <span></span>}</nav></div></section>
+</BaseLayout>
+<style>
+  .list { max-width: 920px; }
+  .pager { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--ink); display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; font: 10px/1 var(--font-mono); }
+  .pager a:last-child { text-align: right; }
+</style>

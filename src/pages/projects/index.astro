@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { statusLabels } from '@/utils/content';
+const projects = await getCollection('projects');
+const statuses = [...new Set(projects.map((project) => project.data.status))];
+---
+<BaseLayout title="Projects | Hongyuan Zhang" description="研究复现、工程项目与学习探索。">
+  <header class="page-hero shell"><span class="eyebrow">PROJECTS / INDEX</span><h1>Research through building.</h1><p>项目不是完成数量的陈列，而是理解问题、复现实验和积累工程能力的具体过程。</p></header>
+  <section class="section"><div class="shell"><div class="filter-note"><span>{projects.length.toString().padStart(2, '0')} ENTRIES</span><span>STATUS IS ALWAYS EXPLICIT</span></div><div class="project-filters" role="group" aria-label="按项目状态筛选"><button type="button" data-project-filter="all" aria-pressed="true">全部</button>{statuses.map((status) => <button type="button" data-project-filter={status} aria-pressed="false">{statusLabels[status]}</button>)}</div><p class="filter-result" data-filter-result aria-live="polite">显示全部 {projects.length} 个项目</p><div class="projects-grid">{projects.map((project) => <ProjectCard project={project} />)}</div></div></section>
+  <script>
+    let filterController: AbortController | undefined;
+    const bindFilters = () => {
+      filterController?.abort(); filterController = new AbortController(); const { signal } = filterController;
+      const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-project-filter]')];
+      const cards = [...document.querySelectorAll<HTMLElement>('[data-project-status]')];
+      const result = document.querySelector<HTMLElement>('[data-filter-result]');
+      buttons.forEach((button) => button.addEventListener('click', () => {
+        const selected = button.dataset.projectFilter || 'all';
+        buttons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+        let visible = 0;
+        cards.forEach((card) => { const show = selected === 'all' || card.dataset.projectStatus === selected; card.hidden = !show; if (show) visible += 1; });
+        if (result) result.textContent = `显示 ${visible} 个项目`;
+      }, { signal }));
+    };
+    bindFilters(); document.addEventListener('astro:page-load', bindFilters);
+  </script>
+</BaseLayout>
+<style>
+  .filter-note { margin-bottom: 28px; padding: 12px 0; border-top: 1px solid var(--ink); display: flex; justify-content: space-between; color: var(--muted); font: 9px/1 var(--font-mono); }
+  .project-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .project-filters button { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: 10px/1 var(--font-mono); cursor: pointer; }
+  .project-filters button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .filter-result { margin: 0 0 24px; color: var(--muted); font-size: .78rem; }
+  .projects-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 720px) { .projects-grid { grid-template-columns: 1fr; } }
+</style>

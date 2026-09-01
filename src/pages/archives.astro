@@ -1,0 +1,19 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { formatDate } from '@/utils/content';
+const posts = (await getCollection('blog')).filter((post) => import.meta.env.DEV || !post.data.draft).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const years = [...new Set(posts.map((post) => post.data.date.getFullYear()))];
+---
+<BaseLayout title="Archives | Hongyuan Zhang" description="按年份浏览全部公开写作。">
+  <header class="page-hero shell"><span class="eyebrow">ARCHIVES / TIME</span><h1>Writing over time.</h1><p>让文章按时间自然累积，形成从本科阶段走向 AI Research 的成长档案。</p></header>
+  <section class="section"><div class="shell archive">{years.length ? years.map((year) => <section><h2>{year}</h2><div>{posts.filter((post) => post.data.date.getFullYear() === year).map((post) => <a href={`${import.meta.env.BASE_URL}blog/${post.id}/`}><time>{formatDate(post.data.date)}</time><strong>{post.data.title}</strong><span>{post.data.category} ↗</span></a>)}</div></section>) : <div class="empty-state">正式文章发布后会自动出现在这里。</div>}</div></section>
+</BaseLayout>
+<style>
+  .archive > section { display: grid; grid-template-columns: 180px 1fr; gap: 50px; margin-bottom: 70px; }
+  h2 { margin: 0; color: var(--accent); font: 500 clamp(2.8rem, 6vw, 5rem)/1 var(--font-mono); }
+  a { display: grid; grid-template-columns: 120px 1fr auto; gap: 20px; align-items: baseline; padding: 19px 0; border-top: 1px solid var(--line); }
+  a:hover strong { color: var(--accent); }
+  time, span { color: var(--muted); font: 9px/1 var(--font-mono); }
+  @media (max-width: 700px) { .archive > section { grid-template-columns: 1fr; gap: 24px; } a { grid-template-columns: 1fr auto; } time { grid-column: 1 / -1; } }
+</style>

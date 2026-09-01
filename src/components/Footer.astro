@@ -1,0 +1,27 @@
+---
+import { profile } from '@/data/profile';
+import { social } from '@/data/social';
+const links = [
+  social.github && ['GitHub', social.github],
+  social.email && ['Email', `mailto:${social.email}`],
+  social.rss && ['RSS', social.rss],
+].filter(Boolean) as [string, string][];
+---
+<footer class="site-footer">
+  <div class="shell footer-grid">
+    <div><span class="footer-mark">HZ</span><h2>{profile.englishName}</h2><p>{profile.roleEn} @ {profile.universityEn}<br />Building toward AI research.</p></div>
+    <div class="footer-links">{links.map(([label, href]) => <a href={href}>{label}</a>)}</div>
+    <div class="footer-meta"><span>© {new Date().getFullYear()} {profile.englishName}</span><span>Built with Astro.</span></div>
+  </div>
+</footer>
+<style>
+  .site-footer { padding: 72px 0 30px; border-top: 1px solid var(--line); }
+  .footer-grid { display: grid; grid-template-columns: 1fr auto; gap: 60px; }
+  .footer-mark { display: inline-grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--ink); font: 700 11px/1 var(--font-mono); }
+  h2 { margin: 24px 0 8px; font-size: 1.2rem; }
+  p { margin: 0; color: var(--muted); font-size: .9rem; }
+  .footer-links { display: flex; gap: 22px; align-items: flex-start; padding-top: 64px; font-size: .86rem; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-meta { grid-column: 1 / -1; padding-top: 28px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: var(--muted); font: 10px/1 var(--font-mono); }
+  @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; gap: 24px; } .footer-links { padding: 0; } .footer-meta { flex-direction: column; gap: 10px; } }
+</style>

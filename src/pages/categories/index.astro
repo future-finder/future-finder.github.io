@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+const posts = (await getCollection('blog')).filter((post) => import.meta.env.DEV || !post.data.draft);
+const counts = new Map<string, number>();
+posts.forEach((post) => counts.set(post.data.category, (counts.get(post.data.category) || 0) + 1));
+const categories = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+---
+<BaseLayout title="Categories | Hongyuan Zhang" description="按主题分类浏览全部写作。">
+  <header class="page-hero shell"><span class="eyebrow">CATEGORIES / WRITING</span><h1>Broad fields of writing.</h1><p>分类描述文章的主要主题；更细的横向关系由标签承担。</p></header>
+  <section class="section"><div class="shell categories">{categories.length ? categories.map(([category, count], index) => <a href={`${import.meta.env.BASE_URL}categories/${encodeURIComponent(category)}/`}><span>{String(index + 1).padStart(2, '0')}</span><strong>{category}</strong><small>{count} entries</small><b>↗</b></a>) : <div class="empty-state">正式文章发布后会自动生成分类。</div>}</div></section>
+</BaseLayout>
+<style>
+  .categories { border-top: 1px solid var(--ink); }
+  .categories a { display: grid; grid-template-columns: 70px 1fr auto 30px; gap: 20px; align-items: center; padding: 25px 0; border-bottom: 1px solid var(--line); }
+  .categories a:hover strong { color: var(--accent); }
+  .categories span, .categories small { color: var(--muted); font: 10px/1 var(--font-mono); }
+  .categories strong { font-size: clamp(1.2rem, 3vw, 2rem); }
+  @media (max-width: 540px) { .categories a { grid-template-columns: 40px 1fr 20px; } .categories small { display: none; } }
+</style>

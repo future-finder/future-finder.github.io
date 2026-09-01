@@ -1,0 +1,8 @@
+node_modules/
+.astro/
+.pagefind/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
