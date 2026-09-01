@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://future-finder.github.io/sitemap-index.xml
