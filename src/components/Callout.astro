@@ -1,9 +1,0 @@
----
-interface Props { title?: string; }
-const { title = 'Note' } = Astro.props;
----
-<aside class="callout"><strong>{title}</strong><div><slot /></div></aside>
-<style>
-  strong { display: block; margin-bottom: 5px; color: var(--accent); font: 600 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; }
-  div :global(p) { margin: 0; }
-</style>
