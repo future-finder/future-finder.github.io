@@ -143,8 +143,30 @@
 <h2><span id="不同任务上的差异"></span>不同任务上的差异</h2>
 <p>总体 F1 只是实验结果的一部分。</p>
 <p>把结果拆分到三个任务以后，可以看到 <strong>Data-to-text 的表现相对较好，而 Summary 更困难</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>粒度</th>
+<th align="right">QA F1</th>
+<th align="right">Data-to-text F1</th>
+<th align="right">Summary F1</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Example-level</td>
+<td align="right">64.77</td>
+<td align="right">87.59</td>
+<td align="right">53.76</td>
+</tr>
+<tr>
+<td>Span-level</td>
+<td align="right">62.05</td>
+<td align="right">58.14</td>
+<td align="right">34.07</td>
+</tr>
+</tbody></table>
 <p>其中 Summary 任务的幻觉类别 Recall 为：</p>
-<p><strong>0.4902</strong></p>
+<p><strong>0.4902</strong>。在 204 条真实幻觉样本中，模型漏检了 104 条。</p>
 <p>也就是说，在摘要任务中，模型仍然漏掉了相当一部分真实幻觉。</p>
 <p>这个结果让我开始注意到一个以前很容易忽略的问题：</p>
 <p><strong>一个总体指标正常，并不意味着模型在所有类型的数据上都表现稳定。</strong></p>
