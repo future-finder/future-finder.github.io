@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="记录在 Windows、VS Code、GCC 与 GDB 环境中的日常开发和调试流程。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="我的 C 语言开发与调试工作流｜张宏远">
+  <meta property="og:description" content="记录在 Windows、VS Code、GCC 与 GDB 环境中的日常开发和调试流程。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/notes/c-workflow/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>我的 C 语言开发与调试工作流｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/" aria-current="page">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/notes/">← 返回笔记</a><div class="article-meta"><span>学习记录</span><span>持续整理</span></div><h1>我的 C 语言开发与调试工作流</h1><p>记录在 Windows、VS Code、GCC 与 GDB 环境中的日常开发和调试流程。</p><div class="tag-row"><span>C</span><span>GCC</span><span>GDB</span></div></header>
+  <div class="article-layout"><div class="prose"><p>刚开始学习 C 语言时，我对“写程序”这件事的理解比较简单：</p>
+<p>写代码，点运行，看结果。</p>
+<p>后来做的数据结构题越来越长，开始需要处理链表、图、表达式、模拟和各种边界情况以后，我逐渐发现，一个稳定的编程过程不只是把代码写出来，还包括编译、测试、调试和检查。</p>
+<p>现在我在 Windows 上写 C 程序时，基本形成了一套比较固定的工作流。</p>
+<h2><span id="一-我目前使用的环境"></span>一、我目前使用的环境</h2>
+<p>我主要使用：</p>
+<ul>
+<li>Windows</li>
+<li>VS Code</li>
+<li>PowerShell</li>
+<li>GCC</li>
+<li>GDB</li>
+</ul>
+<p>其中 VS Code 主要负责代码编辑和调用各种工具，真正完成 C 程序编译的是 GCC，调试则主要依靠 GDB。</p>
+<p>这个区别看起来很基础，但我一开始其实没有完全分清。</p>
+<p>以前我容易把 VS Code 理解成一个完整的“编程软件”，后来才逐渐意识到，它更像一个把编辑器、编译器、调试器和终端组织在一起的工作环境。</p>
+<p>这个认识也让我更容易理解出现问题时应该去检查哪一层。</p>
+<p>例如：</p>
+<ul>
+<li>代码错误，检查程序本身；</li>
+<li>编译失败，先看 GCC；</li>
+<li>调试配置异常，检查 GDB 和相关配置；</li>
+<li>输入没有按预期进入程序，再检查终端和输入方式。</li>
+</ul>
+<p>把不同工具的职责分开以后，很多问题会清楚一些。</p>
+<h2><span id="二-从一个干净的代码文件开始"></span>二、从一个干净的代码文件开始</h2>
+<p>平时刷题或做课程程序时，我更习惯从一个比较干净的文件开始。</p>
+<p>基本结构通常只有：</p>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    return 0;
+}
+</code></pre>
+<p>然后随着题目需要加入：</p>
+<ul>
+<li>结构体；</li>
+<li>全局数组；</li>
+<li>辅助函数；</li>
+<li>其他标准库。</li>
+</ul>
+<p>我现在会尽量避免一开始就复制一个很大的模板。</p>
+<p>原因是 C 语言程序很多问题来自状态和边界，如果程序里一开始就存在大量与当前题目无关的代码，反而会增加检查成本。</p>
+<p>对于大部分题目，我更希望每一部分代码都有明确用途。</p>
+<h2><span id="三-先让程序稳定编译"></span>三、先让程序稳定编译</h2>
+<p>写完一个相对完整的部分以后，我通常会先保存并编译，而不是等整道题全部写完再第一次运行。</p>
+<p>基本过程可以概括为：</p>
+<pre><code class="language-text">编辑
+↓
+保存
+↓
+GCC 编译
+↓
+处理警告或错误
+↓
+运行
+</code></pre>
+<p>编译器报错时，我现在会优先处理<strong>最前面的错误</strong>。</p>
+<p>因为很多后续报错只是第一个语法问题造成的连锁反应。</p>
+<p>例如少了一个括号以后，编译器可能在后面连续报告很多问题。如果从最后一条开始修改，很容易浪费时间。</p>
+<p>所以我的习惯逐渐变成：</p>
+<blockquote>
+<p>先找到第一处编译器真正无法理解的地方。</p>
+</blockquote>
+<h2><span id="四-警告也值得看"></span>四、警告也值得看</h2>
+<p>以前只要程序能够生成可执行文件，我就比较容易忽略 warning。</p>
+<p>后来发现，一些看起来不影响编译的警告其实很有价值。</p>
+<p>例如：</p>
+<ul>
+<li>类型不匹配；</li>
+<li>变量可能未初始化；</li>
+<li>格式控制符和变量类型不一致；</li>
+<li>某些值被隐式转换。</li>
+</ul>
+<p>这些问题不一定马上让程序崩溃，但有可能成为后面很难发现的逻辑错误。</p>
+<p>所以我现在会尽量把编译警告也当成检查程序的一部分，而不只是处理红色的 error。</p>
+<h2><span id="五-运行时尽量减少重复操作"></span>五、运行时尽量减少重复操作</h2>
+<p>需要反复测试程序时，如果每次都手动输入一长串数据，会明显降低效率。</p>
+<p>因此我会根据题目情况使用输入重定向。</p>
+<p>例如把测试数据放入文件：</p>
+<pre><code class="language-text">input.txt
+</code></pre>
+<p>然后让程序直接从这份输入运行。</p>
+<p>这样修改完代码以后，可以快速重复同一组测试，而不用重新输入。</p>
+<p>它还有另一个好处：</p>
+<blockquote>
+<p>测试输入本身被保存了下来。</p>
+</blockquote>
+<p>如果某一组数据能够稳定触发错误，就可以反复使用这组数据检查修改是否真正解决了问题。</p>
+<h2><span id="六-样例通过以后不会立即停止"></span>六、样例通过以后不会立即停止</h2>
+<p>我现在一般会把测试分成几层。</p>
+<h3><span id="第一层-题目样例"></span>第一层：题目样例</h3>
+<p>先确认基本逻辑。</p>
+<h3><span id="第二层-自己构造的小样例"></span>第二层：自己构造的小样例</h3>
+<p>例如：</p>
+<ul>
+<li>一个元素；</li>
+<li>两个元素；</li>
+<li>空结构；</li>
+<li>最小合法输入。</li>
+</ul>
+<h3><span id="第三层-边界情况"></span>第三层：边界情况</h3>
+<p>例如：</p>
+<ul>
+<li>最大或最小值；</li>
+<li>第一个元素；</li>
+<li>最后一个元素；</li>
+<li>没有满足条件的数据；</li>
+<li>所有数据都满足条件。</li>
+</ul>
+<h3><span id="第四层-更复杂的组合"></span>第四层：更复杂的组合</h3>
+<p>检查多个操作连续发生以后状态是否还能保持正确。</p>
+<p>如果问题适合，还可以进一步做随机测试或差分测试。</p>
+<p>这种分层测试比单纯“再随便想几个样例”更稳定。</p>
+<h2><span id="七-什么时候开始使用调试器"></span>七、什么时候开始使用调试器</h2>
+<p>程序出错以后，我不会第一时间打开调试器。</p>
+<p>如果问题是：</p>
+<pre><code class="language-c">if (a = b)
+</code></pre>
+<p>这种明显错误，直接检查代码会更快。</p>
+<p>我通常在下面几种情况使用 GDB：</p>
+<ul>
+<li>某个循环运行若干次后才出错；</li>
+<li>链表指针状态不符合预期；</li>
+<li>栈顶、队首等状态难以仅靠阅读代码判断；</li>
+<li>程序结果错误，但主体逻辑看起来没有明显问题；</li>
+<li>需要寻找“第一次出现异常”的位置。</li>
+</ul>
+<p>这时候调试器的价值就比较明显。</p>
+<h2><span id="八-断点应该放在哪里"></span>八、断点应该放在哪里</h2>
+<p>我以前使用断点时比较随意，哪里觉得“可能有问题”就在哪里停。</p>
+<p>后来我逐渐觉得，断点最好围绕一个明确的问题设置。</p>
+<p>例如：</p>
+<blockquote>
+<p>我怀疑链表删除以后 <code>curr</code> 指向错误。</p>
+</blockquote>
+<p>那么断点应该放在删除操作前后。</p>
+<p>如果怀疑：</p>
+<blockquote>
+<p>表达式处理某个运算符时栈状态异常。</p>
+</blockquote>
+<p>就应该在入栈或出栈的位置停下。</p>
+<p>也就是说：</p>
+<blockquote>
+<p><strong>先提出一个关于程序状态的猜测，再用断点验证。</strong></p>
+</blockquote>
+<p>而不是打开调试器以后漫无目的地逐行执行。</p>
+<h2><span id="九-我最常看的变量"></span>九、我最常看的变量</h2>
+<p>进入调试状态后，我一般不会同时盯着所有变量。</p>
+<p>会优先观察真正决定当前状态的几个量。</p>
+<p>例如链表：</p>
+<pre><code class="language-text">prev
+curr
+next
+</code></pre>
+<p>栈：</p>
+<pre><code class="language-text">top
+stack[top]
+</code></pre>
+<p>图遍历：</p>
+<pre><code class="language-text">current node
+visited[]
+queue / stack
+</code></pre>
+<p>模拟题：</p>
+<pre><code class="language-text">当前位置
+当前状态
+循环计数
+</code></pre>
+<p>如果有几个变量需要长期观察，我会加入 Watch。</p>
+<p>这样程序每执行一步以后，可以直接看到这些状态怎样变化，而不需要反复寻找变量。</p>
+<h2><span id="十-寻找第一次偏离-而不是最终错误"></span>十、寻找第一次偏离，而不是最终错误</h2>
+<p>这是我现在调试时最重要的习惯之一。</p>
+<p>假设程序最终输出：</p>
+<pre><code class="language-text">37
+</code></pre>
+<p>但正确答案应该是：</p>
+<pre><code class="language-text">42
+</code></pre>
+<p>只盯着最终的 37 很难得到信息。</p>
+<p>我会尝试寻找：</p>
+<blockquote>
+<p>从哪一步开始，程序里的状态第一次和我手算的结果不一样？</p>
+</blockquote>
+<p>例如：</p>
+<p>前 8 次循环都正确，第 9 次开始错误。</p>
+<p>那么真正的问题大概率就在第 9 次附近，而不是最终输出的位置。</p>
+<p>所以调试时我更关注：</p>
+<p><strong>first wrong state</strong></p>
+<p>而不是：</p>
+<p><strong>final wrong answer</strong></p>
+<p>这种方法尤其适合状态较多的程序。</p>
+<h2><span id="十一-修改一次-只重新验证一个假设"></span>十一、修改一次，只重新验证一个假设</h2>
+<p>以前调试程序时，我有时会一次改几个地方：</p>
+<ul>
+<li>调整循环条件；</li>
+<li>修改初始化；</li>
+<li>改一个判断；</li>
+<li>顺手重写一段代码。</li>
+</ul>
+<p>如果结果突然正确，我反而不知道真正的问题是什么。</p>
+<p>现在我更希望每一次修改都有明确理由：</p>
+<blockquote>
+<p>我认为这里的循环少处理了最后一个元素，所以只修改循环边界。</p>
+</blockquote>
+<p>然后重新运行。</p>
+<p>如果问题解决，就能确认自己的判断。</p>
+<p>如果没有解决，再继续寻找其他原因。</p>
+<p>这样虽然单次修改看起来慢一点，但整个调试过程更容易保持清楚。</p>
+<h2><span id="十二-我的日常流程"></span>十二、我的日常流程</h2>
+<p>如果把目前的习惯压缩成一条完整流程，大致是：</p>
+<pre><code class="language-text">理解题目
+↓
+设计数据结构和主要状态
+↓
+编写代码
+↓
+保存
+↓
+GCC 编译
+↓
+处理 error / warning
+↓
+运行样例
+↓
+测试最小和边界数据
+↓
+定位异常
+↓
+必要时使用 GDB
+↓
+观察关键状态
+↓
+修改一个明确问题
+↓
+重新测试
+</code></pre>
+<p>如果程序比较复杂，我还会再增加：</p>
+<pre><code class="language-text">随机测试 / 差分测试
+</code></pre>
+<h2><span id="十三-一些提高效率的小习惯"></span>十三、一些提高效率的小习惯</h2>
+<p>在 VS Code 中，我现在也会使用一些比较简单但高频的操作：</p>
+<ul>
+<li>快速保存；</li>
+<li>快速注释；</li>
+<li>移动代码行；</li>
+<li>复制当前行；</li>
+<li>重命名变量；</li>
+<li>快速打开文件；</li>
+<li>打开终端；</li>
+<li>单步调试。</li>
+</ul>
+<p>这些操作本身没有什么技术含量，但当每天需要反复编辑、编译和调试程序时，减少重复操作还是能节省不少注意力。</p>
+<p>我更愿意把它们看成一种基本的工具熟悉度，而不是单独需要学习的“技能”。</p>
+<h2><span id="我目前对这套工作流的理解"></span>我目前对这套工作流的理解</h2>
+<p>以前我容易把“编程能力”主要理解成：</p>
+<blockquote>
+<p>能不能想到算法，以及能不能把代码写出来。</p>
+</blockquote>
+<p>现在我觉得还缺少后半部分：</p>
+<blockquote>
+<p>写出来以后，怎样确认它真的正确？</p>
+</blockquote>
+<p>这也是为什么我的工作流逐渐从：</p>
+<pre><code class="language-text">写代码 → 运行
+</code></pre>
+<p>变成了：</p>
+<pre><code class="language-text">写代码 → 编译 → 测试 → 观察 → 定位 → 验证
+</code></pre>
+<p>工具本身并不是重点。</p>
+<p>GCC、GDB、VS Code 都只是在帮助我更快地回答一个问题：</p>
+<blockquote>
+<p><strong>程序现在究竟处于什么状态，它为什么会得到这个结果？</strong></p>
+</blockquote>
+<p>我现在仍然会写出边界错误、初始化错误或者逻辑遗漏。</p>
+<p>但相比单纯依赖反复重读代码，我已经越来越习惯把问题拆开，用测试和程序状态逐步定位。</p>
+<p>这套工作流也还在继续调整。</p>
+<p>程序已经出现错误时，我会配合使用<a href="/notes/c-debug-checklist/">《我的 C 语言程序检查与调试清单》</a>，按固定顺序缩小范围。</p>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#一-我目前使用的环境">一、我目前使用的环境</a><a href="#二-从一个干净的代码文件开始">二、从一个干净的代码文件开始</a><a href="#三-先让程序稳定编译">三、先让程序稳定编译</a><a href="#四-警告也值得看">四、警告也值得看</a><a href="#五-运行时尽量减少重复操作">五、运行时尽量减少重复操作</a><a href="#六-样例通过以后不会立即停止">六、样例通过以后不会立即停止</a><a href="#七-什么时候开始使用调试器">七、什么时候开始使用调试器</a><a href="#八-断点应该放在哪里">八、断点应该放在哪里</a><a href="#九-我最常看的变量">九、我最常看的变量</a><a href="#十-寻找第一次偏离-而不是最终错误">十、寻找第一次偏离，而不是最终错误</a><a href="#十一-修改一次-只重新验证一个假设">十一、修改一次，只重新验证一个假设</a><a href="#十二-我的日常流程">十二、我的日常流程</a><a href="#十三-一些提高效率的小习惯">十三、一些提高效率的小习惯</a><a href="#我目前对这套工作流的理解">我目前对这套工作流的理解</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/notes/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

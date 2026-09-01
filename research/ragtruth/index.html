@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="整理 RAGTruth 的三类任务、标注方式，以及 response-level 与 span-level 的区别。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="理解 RAGTruth：任务、标注与评测粒度｜张宏远">
+  <meta property="og:description" content="整理 RAGTruth 的三类任务、标注方式，以及 response-level 与 span-level 的区别。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/research/ragtruth/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>理解 RAGTruth：任务、标注与评测粒度｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/" aria-current="page">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/research/">← 返回研究</a><div class="article-meta"><span>研究阅读</span><span>整理于 2026 年 8 月</span></div><h1>理解 RAGTruth：任务、标注与评测粒度</h1><p>整理 RAGTruth 的三类任务、标注方式，以及 response-level 与 span-level 的区别。</p><div class="tag-row"><span>RAGTruth</span><span>评测</span><span>学习笔记</span></div></header>
+  <div class="article-layout"><div class="prose"><h2><span id="为什么整理-ragtruth"></span>为什么整理 RAGTruth</h2>
+<p>在复现 LettuceDetect 的过程中，我发现仅仅知道“模型在 RAGTruth 上做幻觉检测”是不够的。</p>
+<p>如果不先弄清楚数据集究竟包含什么任务、怎样定义幻觉、评测时究竟在比较什么，那么最后得到的 Precision、Recall 和 F1 很容易只剩下一组数字。</p>
+<p>因此，我专门重新整理了一遍 RAGTruth 的任务结构和标注方式。这一数据集后来也用于我的 <a href="/research/lettucedetect/">LettuceDetect 复现实验</a>。</p>
+<p>这一步主要解决三个问题：</p>
+<ol>
+<li>RAGTruth 里的样本来自哪些任务；</li>
+<li>一条回答中的“幻觉”具体怎样表示；</li>
+<li>response-level 和 span-level 两种评测分别在衡量什么。</li>
+</ol>
+<h2><span id="三类任务"></span>三类任务</h2>
+<p>我目前整理到的 RAGTruth 主要包含三类任务：</p>
+<ul>
+<li>QA</li>
+<li>Data-to-text</li>
+<li>Summary</li>
+</ul>
+<p>虽然它们都可以放在“基于给定信息生成文本”的框架下理解，但实际输出形式差异很大。</p>
+<h3><span id="qa"></span>QA</h3>
+<p>QA 对应问答场景。</p>
+<p>模型需要根据给定信息回答问题。</p>
+<p>在这种情况下，幻觉通常体现为回答中出现了无法由已有信息支持的内容。</p>
+<h3><span id="data-to-text"></span>Data-to-text</h3>
+<p>Data-to-text 是从结构化或半结构化数据生成自然语言文本。</p>
+<p>这类任务和普通问答不同。</p>
+<p>输入本身通常提供了比较明确的信息边界，因此模型输出中的具体事实是否能与输入对应，相对更容易检查。</p>
+<p>在后续 LettuceDetect 的实验结果中，我也观察到 Data-to-text 的检测表现相对更好。</p>
+<h3><span id="summary"></span>Summary</h3>
+<p>Summary 对应摘要任务。</p>
+<p>模型需要在压缩原始信息的同时重新组织语言。</p>
+<p>相比直接回答问题或者描述结构化数据，摘要的表达自由度更高，因此判断某个具体文本片段是否属于幻觉也更复杂。</p>
+<p>在 LettuceDetect 的复现结果中，Summary 也是三个任务中相对困难的一类。</p>
+<p>这让我开始意识到：即使都叫“幻觉检测”，不同生成任务之间的难度实际上可能差别很大。</p>
+<h2><span id="response-level-与-span-level"></span>Response-level 与 Span-level</h2>
+<p>理解 RAGTruth 时，我觉得最重要的区别之一是：</p>
+<p><strong>一条回答是否包含幻觉，和幻觉具体出现在哪里，是两个不同的问题。</strong></p>
+<h3><span id="response-level"></span>Response-level</h3>
+<p>Response-level 关注的是整条回答。</p>
+<p>可以把问题理解成：</p>
+<blockquote>
+<p>这条回答中是否存在幻觉？</p>
+</blockquote>
+<p>如果回答中的某个位置出现错误，那么整条回答就可以被视为包含幻觉。</p>
+<p>这种标注粒度更粗。</p>
+<h3><span id="span-level"></span>Span-level</h3>
+<p>Span-level 进一步定位到具体文本片段。</p>
+<p>问题变成：</p>
+<blockquote>
+<p>哪一段文本属于幻觉？</p>
+</blockquote>
+<p>这不仅需要发现回答有问题，还要求定位错误的位置和范围。</p>
+<p>因此，Span-level 比单纯判断整条回答是否有幻觉要求更高。</p>
+<h2><span id="为什么两种粒度不能混在一起看"></span>为什么两种粒度不能混在一起看</h2>
+<p>刚开始接触实验指标时，我很容易把所有 F1 都理解成“模型检测幻觉的准确程度”。</p>
+<p>但实际上，如果评测对象不同，同一个 F1 数字表达的含义也不同。</p>
+<p>例如：</p>
+<ul>
+<li>response-level 判断的是整条回答；</li>
+<li>span-level 判断的是具体文本位置。</li>
+</ul>
+<p>一个模型可能能够比较准确地发现：</p>
+<blockquote>
+<p>“这条回答有问题。”</p>
+</blockquote>
+<p>但未必能够进一步准确指出：</p>
+<blockquote>
+<p>“问题就在这一句话或这个文本片段里。”</p>
+</blockquote>
+<p>这也是为什么在 LettuceDetect 的复现中，Example-level F1 明显高于 Span-level F1。</p>
+<p>前者更接近整体判断，后者要求更加精细的定位。</p>
+<p>理解这一点以后，实验结果才真正有了可解释性。</p>
+<h2><span id="数据集结构会影响实验结果"></span>数据集结构会影响实验结果</h2>
+<p>整理 RAGTruth 以后，我对“数据集”本身的看法也发生了一些变化。</p>
+<p>以前看实验时，我更容易把一个数据集当成一个整体：</p>
+<blockquote>
+<p>某个模型在 RAGTruth 上得到了多少 F1。</p>
+</blockquote>
+<p>但 RAGTruth 本身包含 QA、Data-to-text 和 Summary 三种不同任务。</p>
+<p>如果只看一个总体指标，实际上相当于把这些不同任务的表现压缩成了一个数字。</p>
+<p>这会隐藏很多信息。</p>
+<p>例如在我的 LettuceDetect 复现中，Data-to-text 的表现相对较好，而 Summary 的幻觉召回明显更低。</p>
+<p>如果只看 overall F1，这个差别就不容易被注意到。</p>
+<p>因此，我现在会更倾向于先问：</p>
+<blockquote>
+<p>这个总体指标是由哪些类型的数据共同构成的？</p>
+</blockquote>
+<p>而不是直接把一个总体 F1 当作模型能力的完整描述。</p>
+<h2><span id="标注粒度决定模型究竟在学什么"></span>标注粒度决定模型究竟在学什么</h2>
+<p>另一个值得注意的问题是，标注方式实际上会影响任务本身。</p>
+<p>如果只提供 response-level 标签，模型学习的是：</p>
+<blockquote>
+<p>判断整条回答是否可信。</p>
+</blockquote>
+<p>如果提供 span-level 标签，模型面对的问题则进一步变成：</p>
+<blockquote>
+<p>在回答中找出具体不可信的文本区域。</p>
+</blockquote>
+<p>这两种任务虽然相关，但并不完全相同。</p>
+<p>它们需要模型捕捉的信息粒度不同，评测方式也不同。</p>
+<p>因此，在阅读一篇幻觉检测论文时，只知道“使用了 RAGTruth”仍然不够。</p>
+<p>还需要继续确认：</p>
+<ul>
+<li>使用的是哪一种标注；</li>
+<li>模型的输出是什么；</li>
+<li>最终使用什么粒度进行评测。</li>
+</ul>
+<p>否则很容易把不同方法的结果直接放在一起比较，而忽略它们实际上解决的并不是完全相同的问题。</p>
+<h2><span id="对我后续实验的影响"></span>对我后续实验的影响</h2>
+<p>整理完 RAGTruth 后，我在看实验结果时开始固定检查几件事：</p>
+<h3><span id="1.-任务是什么"></span>1. 任务是什么</h3>
+<p>先确认模型到底是在做整体分类，还是定位具体幻觉片段。</p>
+<h3><span id="2.-数据从哪里来"></span>2. 数据从哪里来</h3>
+<p>确认总体结果中包含哪些子任务。</p>
+<h3><span id="3.-标签粒度是什么"></span>3. 标签粒度是什么</h3>
+<p>区分 response-level 和 span-level。</p>
+<h3><span id="4.-指标对应哪个对象"></span>4. 指标对应哪个对象</h3>
+<p>同样是 F1，也需要先确认它是在什么粒度上计算的。</p>
+<h3><span id="5.-总体结果是否掩盖了子任务差异"></span>5. 总体结果是否掩盖了子任务差异</h3>
+<p>在条件允许时，继续拆分 QA、Data-to-text 和 Summary 分别观察。</p>
+<p>这些问题看起来比较基础，但实际做过一次完整评测以后，我发现它们直接决定了实验结果应该怎样解释。</p>
+<h2><span id="一点认识"></span>一点认识</h2>
+<p>这次整理让我更加明确了一件事：</p>
+<p><strong>实验指标本身没有脱离任务定义而独立存在的意义。</strong></p>
+<p>一个 F1 是否高、两个模型能不能直接比较，都要先看：</p>
+<ul>
+<li>数据是什么；</li>
+<li>标签是什么；</li>
+<li>模型输出是什么；</li>
+<li>指标到底测了什么。</li>
+</ul>
+<p>这也是为什么我现在读实验部分时，会先花时间把任务和评测口径画清楚，再去看最后的结果表。</p>
+<p>对我来说，理解 RAGTruth 的价值不只是在于熟悉一个数据集，而是在于开始更认真地区分：</p>
+<blockquote>
+<p>“模型得到了什么结果”</p>
+</blockquote>
+<p>和</p>
+<blockquote>
+<p>“这个结果实际上意味着什么”。</p>
+</blockquote>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#为什么整理-ragtruth">为什么整理 RAGTruth</a><a href="#三类任务">三类任务</a><a href="#response-level-与-span-level">Response-level 与 Span-level</a><a href="#为什么两种粒度不能混在一起看">为什么两种粒度不能混在一起看</a><a href="#数据集结构会影响实验结果">数据集结构会影响实验结果</a><a href="#标注粒度决定模型究竟在学什么">标注粒度决定模型究竟在学什么</a><a href="#对我后续实验的影响">对我后续实验的影响</a><a href="#一点认识">一点认识</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/research/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

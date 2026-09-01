@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="RLSeek 阅读笔记：从幻觉定位到证据约束｜张宏远">
+  <meta property="og:description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/research/rlseek/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>RLSeek 阅读笔记：从幻觉定位到证据约束｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/" aria-current="page">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/research/">← 返回研究</a><div class="article-meta"><span>研究阅读</span><span>阅读于 2026 年 7 月起</span></div><h1>RLSeek 阅读笔记：从幻觉定位到证据约束</h1><p>阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。</p><div class="tag-row"><span>RLSeek</span><span>证据约束</span><span>阅读笔记</span></div></header>
+  <div class="article-layout"><div class="prose"><h2><span id="为什么读-rlseek"></span>为什么读 RLSeek</h2>
+<p>在接触大模型幻觉检测以后，我逐渐发现，“检测幻觉”其实是一个很宽泛的说法。</p>
+<p>有的方法只判断一条回答是否存在问题，有的方法需要进一步定位具体的错误片段；还有一些方法会额外要求模型说明自己的判断依据来自哪里。</p>
+<p>RLSeek 比较吸引我的地方，就在于它不仅关注幻觉文本本身，还把<strong>来源证据</strong>纳入了任务设计。</p>
+<p>这让我开始思考一个问题：</p>
+<blockquote>
+<p>如果模型认为某段文本是幻觉，它是否也应该说明，这个判断是相对于哪一部分证据得出的？</p>
+</blockquote>
+<h2><span id="任务输入与输出"></span>任务输入与输出</h2>
+<p>按照我目前的理解，RLSeek 的输入主要包含：</p>
+<ul>
+<li>指令；</li>
+<li>来源证据；</li>
+<li>待检测文本。</li>
+</ul>
+<p>模型的输出不是简单的“有幻觉 / 无幻觉”分类，而是需要进一步给出幻觉所在的具体字符区间或文本片段。</p>
+<p>因此，它面对的是一个更细粒度的检测问题。</p>
+<p>可以把任务简单理解成：</p>
+<blockquote>
+<p>给定一组来源信息，判断待检测文本中哪些部分没有得到这些来源的支持。</p>
+</blockquote>
+<p>这里的关键不只是判断整条回答是否存在错误，而是要进一步指出：</p>
+<blockquote>
+<p><strong>具体哪里有问题。</strong></p>
+</blockquote>
+<h2><span id="为什么要做-span-level-检测"></span>为什么要做 Span-level 检测</h2>
+<p>如果模型只输出一个整体标签，那么我们只能知道：</p>
+<blockquote>
+<p>这条回答可能存在幻觉。</p>
+</blockquote>
+<p>但很难继续回答：</p>
+<ul>
+<li>哪一句出了问题；</li>
+<li>错误范围有多大；</li>
+<li>一条回答里是否只有部分内容不可靠。</li>
+</ul>
+<p>对于长回答来说，这种区别尤其明显。</p>
+<p>一条回答完全可能同时包含：</p>
+<ul>
+<li>有证据支持的内容；</li>
+<li>无法确认的内容；</li>
+<li>明确与证据冲突的内容。</li>
+</ul>
+<p>如果把整条回答压缩成一个二分类标签，会丢失很多信息。</p>
+<p>因此，字符级或 span 级的定位能够提供更具体的结果，也为后续分析留下更多空间。</p>
+<h2><span id="证据引用约束"></span>证据引用约束</h2>
+<p>RLSeek 中另一个让我比较关注的部分，是它没有只要求模型输出幻觉位置，而是进一步引入了对来源证据的引用约束。</p>
+<p>这背后的逻辑很直接：</p>
+<p>如果模型判断某一段文本不被支持，那么这个判断最好能够和具体证据建立联系。</p>
+<p>否则，模型可能只是给出了一个结论，但无法说明结论是怎样产生的。</p>
+<p>加入证据引用以后，任务就不仅是：</p>
+<blockquote>
+<p>找出错误文本。</p>
+</blockquote>
+<p>还多了一层：</p>
+<blockquote>
+<p>根据哪些证据作出这个判断？</p>
+</blockquote>
+<p>这使检测结果具备更强的可检查性。</p>
+<p>对我来说，这一点比单纯提高一个检测指标更值得关注，因为它让“模型判断”和“判断依据”之间建立了显式联系。</p>
+<h2><span id="训练信号"></span>训练信号</h2>
+<p>从我的阅读记录来看，RLSeek 使用了 <strong>GRPO 风格的训练方法</strong>。</p>
+<p>训练目标中包含对幻觉 span 检测结果的奖励，同时对证据引用中的问题施加惩罚。</p>
+<p>可以把这个思路粗略理解为：</p>
+<p><strong>最终奖励 = span 检测奖励 − 引用惩罚</strong></p>
+<p>它并不是只要求模型“猜对幻觉位置”。</p>
+<p>模型还需要尽量给出合理的证据引用，否则即使检测部分表现不错，整体奖励仍然会受到影响。</p>
+<p>这一设计让我看到了一种比较清楚的训练思路：</p>
+<blockquote>
+<p>如果希望模型同时具备两种行为，就需要在训练目标中同时约束这两种行为。</p>
+</blockquote>
+<p>这里分别对应：</p>
+<ul>
+<li>幻觉位置检测；</li>
+<li>证据引用。</li>
+</ul>
+<p>这种做法比单纯在提示词里要求模型“请同时给出证据”更明确，因为证据行为直接进入了训练目标。</p>
+<h2><span id="span-f1"></span>Span F1</h2>
+<p>RLSeek 的评测中包含字符或 span 级 F1。</p>
+<p>这和我后来在 RAGTruth、LettuceDetect 中接触到的细粒度评测有相似之处。</p>
+<p>它关注的不只是：</p>
+<blockquote>
+<p>模型有没有发现这条回答存在问题。</p>
+</blockquote>
+<p>而是：</p>
+<blockquote>
+<p>模型预测出的错误区间，与真实标注区间重合到什么程度。</p>
+</blockquote>
+<p>这类指标比整体分类更严格。</p>
+<p>模型即使知道某一句话“有问题”，如果预测的文本范围过长、过短，或者定位错了位置，都可能影响最终得分。</p>
+<p>这也让我逐渐意识到，幻觉检测任务中的“检测”实际上可以分成不同层级：</p>
+<p><strong>回答级判断 → 片段级定位 → 证据级解释</strong></p>
+<p>不同方法解决的可能只是其中某一个层级，因此不能只看到“幻觉检测”四个字就把它们当成同一个任务。</p>
+<h2><span id="我觉得最重要的任务边界"></span>我觉得最重要的任务边界</h2>
+<p>阅读 RLSeek 时，我认为最值得区分的一点是：</p>
+<p><strong>相对于给定来源的忠实性，并不等于一般意义上的事实正确性。</strong></p>
+<p>假设系统给模型提供了一组来源材料。</p>
+<p>RLSeek 主要判断的是：</p>
+<blockquote>
+<p>待检测文本是否得到了这些来源材料的支持。</p>
+</blockquote>
+<p>但这里存在一个前提：</p>
+<blockquote>
+<p>来源本身是当前判断的依据。</p>
+</blockquote>
+<p>如果来源信息本身存在错误，或者检索阶段没有找到真正相关的信息，那么后续的幻觉检测并不能自动解决这些问题。</p>
+<p>例如，一句话可能：</p>
+<ul>
+<li>与当前来源一致；</li>
+<li>但来源本身就是错误的。</li>
+</ul>
+<p>在这种情况下，它可能满足“相对来源忠实”，却仍然不满足更广义的“事实正确”。</p>
+<p>反过来，一句话也可能实际上是真实的，但因为当前检索到的来源没有包含相应信息，而被视为缺乏支持。</p>
+<p>因此，我更愿意把这类问题理解为：</p>
+<blockquote>
+<p><strong>groundedness / faithfulness relative to given evidence</strong></p>
+</blockquote>
+<p>而不是把它直接等同于：</p>
+<blockquote>
+<p><strong>世界事实性判断。</strong></p>
+</blockquote>
+<h2><span id="这一区分为什么重要"></span>这一区分为什么重要</h2>
+<p>如果不区分这两个问题，很容易对一个幻觉检测系统的能力范围产生误解。</p>
+<p>例如，一个系统在给定证据条件下能够很好地找出不受支持的内容，并不意味着它已经具备：</p>
+<ul>
+<li>判断任意世界事实真假的能力；</li>
+<li>发现检索材料本身的错误；</li>
+<li>判断检索是否遗漏关键证据；</li>
+<li>自动补全真实但未检索到的信息。</li>
+</ul>
+<p>这些其实属于更大的系统问题。</p>
+<p>一个完整的 RAG 系统至少可能涉及：</p>
+<p><strong>检索 → 证据质量 → 生成 → 忠实性检测 → 最终验证</strong></p>
+<p>RLSeek 更接近其中“生成内容是否忠实于当前证据”这一部分。</p>
+<p>把这一层边界画清楚以后，我反而更容易理解它真正解决了什么问题。</p>
+<h2><span id="一个对我影响比较大的认识"></span>一个对我影响比较大的认识</h2>
+<p>以前接触一个方法时，我很容易先看：</p>
+<ul>
+<li>模型结构；</li>
+<li>训练方式；</li>
+<li>F1 提高了多少。</li>
+</ul>
+<p>后来我越来越觉得，在这些问题之前还有一个更基础的问题：</p>
+<blockquote>
+<p><strong>这个方法到底定义了什么问题？</strong></p>
+</blockquote>
+<p>例如 RLSeek 中，如果把“幻觉检测”直接理解成“判断一句话真不真实”，就会误解整个方法。</p>
+<p>只有先明确：</p>
+<ul>
+<li>给定证据是什么；</li>
+<li>模型输出什么；</li>
+<li>span 是怎样定义的；</li>
+<li>引用承担什么作用；</li>
+<li>训练奖励在约束什么；</li>
+</ul>
+<p>后面的模型结构和实验结果才真正有意义。</p>
+<p>因此，我现在读这类论文时，会优先尝试把任务写成一句尽可能准确的话。</p>
+<p>对 RLSeek，我目前更愿意把它概括成：</p>
+<blockquote>
+<p><strong>在给定来源证据的条件下，定位待检测文本中缺乏证据支持的片段，并通过证据引用约束增强判断的可检查性。</strong></p>
+</blockquote>
+<p>这个表述比简单说“它是一个幻觉检测方法”更接近我对它的理解。</p>
+<h2><span id="当前理解范围"></span>当前理解范围</h2>
+<p>目前这份笔记记录的是我在阅读和讨论 RLSeek 过程中形成的理解，重点包括：</p>
+<ul>
+<li>任务输入与输出；</li>
+<li>span 级幻觉定位；</li>
+<li>证据引用约束；</li>
+<li>GRPO 风格训练；</li>
+<li>span 级评测；</li>
+<li>相对证据忠实性与一般事实性的区别。</li>
+</ul>
+<p><strong>我目前没有完成 RLSeek 的独立复现。</strong> 这里记录的是阅读形成的方法理解和问题边界，不包含个人复现实验结果。</p>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#为什么读-rlseek">为什么读 RLSeek</a><a href="#任务输入与输出">任务输入与输出</a><a href="#为什么要做-span-level-检测">为什么要做 Span-level 检测</a><a href="#证据引用约束">证据引用约束</a><a href="#训练信号">训练信号</a><a href="#span-f1">Span F1</a><a href="#我觉得最重要的任务边界">我觉得最重要的任务边界</a><a href="#这一区分为什么重要">这一区分为什么重要</a><a href="#一个对我影响比较大的认识">一个对我影响比较大的认识</a><a href="#当前理解范围">当前理解范围</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/research/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="一个仍在开发中的长篇文本交互系统探索，关注状态一致性、证据检索与验证。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="NovelST：长篇文本交互式 AI 系统探索｜张宏远">
+  <meta property="og:description" content="一个仍在开发中的长篇文本交互系统探索，关注状态一致性、证据检索与验证。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/projects/novelst/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>NovelST：长篇文本交互式 AI 系统探索｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/">研究</a><a href="/projects/" aria-current="page">项目</a><a href="/notes/">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/projects/">← 返回项目</a><div class="article-meta"><span>探索项目</span><span>进行中</span></div><h1>NovelST：长篇文本交互式 AI 系统探索</h1><p>一个仍在开发中的长篇文本交互系统探索，关注状态一致性、证据检索与验证。</p><div class="tag-row"><span>进行中</span><span>长文本</span><span>状态管理</span></div></header>
+  <div class="article-layout"><div class="prose"><h2><span id="项目起点"></span>项目起点</h2>
+<p>NovelST 最开始来自一个很具体的问题：</p>
+<p>如果让大语言模型长期参与一个长篇文本世界中的交互，怎样尽量避免它在不断生成的过程中逐渐忘记已有事实、混淆人物状态，或者生成与原文和历史状态相冲突的内容？</p>
+<p>短对话中，这些问题有时并不明显。</p>
+<p>但当背景文本扩展到上千章、人物关系和事件不断积累以后，仅仅依靠上下文窗口或者普通的检索已经很难维持长期一致性。</p>
+<p>因此，我开始尝试把这个问题拆成几个更具体的部分：</p>
+<ul>
+<li>原始文本怎样整理成稳定、可检索的知识来源；</li>
+<li>哪些状态应该由程序维护，而不是交给模型自己记忆；</li>
+<li>模型生成的结果怎样经过检查后才能写回系统；</li>
+<li>当生成失败或状态冲突时，系统怎样处理。</li>
+</ul>
+<p>NovelST 就是在这个过程中逐渐形成的。</p>
+<p>它目前仍然是一个<strong>未完成的个人探索项目</strong>。我更看重这个过程中逐渐形成的系统设计思路，而不是把它描述成一个已经成熟的软件产品。</p>
+<h2><span id="为什么单纯依赖大模型不够"></span>为什么单纯依赖大模型不够</h2>
+<p>最初考虑这个问题时，我很容易把重点放在模型本身：</p>
+<blockquote>
+<p>是否可以通过更长的上下文、更强的模型或者更好的提示词解决？</p>
+</blockquote>
+<p>但继续往下做以后，我逐渐觉得，很多问题实际上并不应该完全交给模型解决。</p>
+<p>例如：</p>
+<ul>
+<li>一个角色现在是否知道某件事；</li>
+<li>某个事件是否已经发生；</li>
+<li>某个状态从什么时候开始有效；</li>
+<li>一段信息来自原著、模型推断还是此前生成结果；</li>
+<li>两条状态发生冲突时，哪一条应该被保留。</li>
+</ul>
+<p>这些问题如果只依赖自然语言上下文，很难长期保持稳定。</p>
+<p>因此，我开始把系统中的信息分成两类：</p>
+<p><strong>模型负责生成和推理，程序负责保存需要长期保持一致的状态。</strong></p>
+<p>这是 NovelST 中一个比较重要的设计出发点。</p>
+<h2><span id="文本与证据"></span>文本与证据</h2>
+<p>原始小说大约有 <strong>1070 章</strong>。</p>
+<p>在前期处理中，我尝试把原始文本整理成更稳定的检索单位。历史记录中，确定性语料经过处理后约形成 <strong>98,630 个稳定段落</strong>。</p>
+<p>这样做的目的不是简单地把小说“切块”，而是希望后续检索得到的文本具有相对稳定的身份。</p>
+<p>如果同一段原文在不同阶段被反复重新切分，很多引用、状态关联和调试记录都会变得难以追踪。</p>
+<p>因此，我越来越倾向于把原始文本看成系统中的一种<strong>证据源</strong>：</p>
+<p>模型可以使用这些文本，但不应该随意修改它们。</p>
+<h2><span id="状态与证据分开保存"></span>状态与证据分开保存</h2>
+<p>在目前的设计中，我尝试让不同类型的信息进入不同的存储层。</p>
+<h3><span id="sqlite"></span>SQLite</h3>
+<p>SQLite 用于保存结构化、需要明确维护的权威状态。</p>
+<p>例如一个实体的当前状态、某条关系是否成立、信息的来源和时间等。</p>
+<p>这类信息如果散落在自然语言上下文中，很难进行稳定查询和更新，因此更适合结构化保存。</p>
+<h3><span id="qdrant"></span>Qdrant</h3>
+<p>Qdrant 主要用于保存原著证据及其向量表示，支持后续检索。</p>
+<p>它解决的是：</p>
+<blockquote>
+<p>当前问题可能和哪些原始文本有关？</p>
+</blockquote>
+<p>而不是：</p>
+<blockquote>
+<p>当前系统的权威状态是什么？</p>
+</blockquote>
+<p>这两个问题看起来接近，但实际职责不同。</p>
+<p>一个负责找到可能相关的证据，一个负责保存当前系统认可的状态。</p>
+<p>把二者分开以后，系统结构会清楚很多。</p>
+<h2><span id="当前工作集与长期记忆"></span>当前工作集与长期记忆</h2>
+<p>在探索过程中，我还尝试区分不同时间尺度的信息。</p>
+<p><strong>MVU</strong> 用来表示当前工作集，保存交互过程中需要频繁读取和更新的信息。</p>
+<p><strong>Memory Books</strong> 则用于保存已经完成场景的长期记忆。</p>
+<p>这个设计最初是为了减少一个问题：</p>
+<p>如果所有历史信息都持续进入当前上下文，系统会越来越臃肿；但如果简单删除旧内容，又可能失去后续真正需要的信息。</p>
+<p>因此，我希望不同生命周期的信息能够有不同的去向，而不是全部堆进同一个上下文。</p>
+<p>这一部分目前仍然在继续调整。</p>
+<h2><span id="结构化生成"></span>结构化生成</h2>
+<p>另一个我重点尝试的问题是：</p>
+<blockquote>
+<p>模型生成以后，结果能不能直接进入系统状态？</p>
+</blockquote>
+<p>我的答案逐渐变成：<strong>不能。</strong></p>
+<p>自然语言模型的输出本身并不稳定。</p>
+<p>即使提示词要求输出固定格式，也可能出现：</p>
+<ul>
+<li>JSON 格式错误；</li>
+<li>字段缺失；</li>
+<li>类型错误；</li>
+<li>内容虽然格式正确，但语义上和当前状态冲突。</li>
+</ul>
+<p>因此，我尝试设计一条更明确的处理链路：</p>
+<p><strong>模型输出 → JSON 解析 → Pydantic 结构校验 → 语义检查 → 候选状态</strong></p>
+<p>这里有一个很重要的区别：</p>
+<p>通过格式校验，并不代表结果就是正确的。</p>
+<p>例如：</p>
+<pre><code class="language-text">age: -20
+</code></pre>
+<p>在数据类型上完全可能是合法整数，但语义显然存在问题。</p>
+<p>所以结构校验之后，还需要进一步检查：</p>
+<ul>
+<li>状态是否与已有信息冲突；</li>
+<li>引用的实体是否存在；</li>
+<li>时间关系是否合理；</li>
+<li>信息来源是否能够追踪。</li>
+</ul>
+<p>这也是我第一次比较具体地区分：</p>
+<p><strong>“格式正确”与“状态正确”并不是同一件事。</strong></p>
+<h2><span id="为什么需要候选层"></span>为什么需要候选层</h2>
+<p>如果模型的生成结果经过一次校验就直接写入权威状态，一旦判断错误，错误就会进入后续所有交互。</p>
+<p>而在长时间运行的系统中，这种错误可能不断传播。</p>
+<p>因此，我尝试在模型输出和最终状态之间加入一个候选层。</p>
+<p>模型生成的新状态先进入候选区域：</p>
+<p><strong>生成 → 检查 → 候选 → 确认 → 写入</strong></p>
+<p>这样做的意义是把：</p>
+<blockquote>
+<p>模型提出一个状态</p>
+</blockquote>
+<p>和：</p>
+<blockquote>
+<p>系统承认这个状态</p>
+</blockquote>
+<p>区分开。</p>
+<p>这也是 NovelST 中我目前比较看重的一点。</p>
+<h2><span id="失败不是异常情况"></span>失败不是异常情况</h2>
+<p>在最开始设计系统时，我容易默认：</p>
+<blockquote>
+<p>模型只要按照提示词工作，正常情况下就应该得到可用输出。</p>
+</blockquote>
+<p>后面逐渐发现，更合理的假设其实是：</p>
+<blockquote>
+<p>模型输出失败本身就是系统运行中的正常情况。</p>
+</blockquote>
+<p>因此，目前的设计中考虑了失败重试。</p>
+<p>如果输出无法通过解析或者验证，可以重新生成；如果连续失败，则进入隔离状态，而不是继续把有问题的结果传给后续流程。</p>
+<p>我把这一过程理解成：</p>
+<p><strong>失败 → 重试 → 再验证 → 必要时隔离</strong></p>
+<p>这比单纯追求“第一次生成一定正确”更现实。</p>
+<h2><span id="我开始关心-权威状态"></span>我开始关心“权威状态”</h2>
+<p>NovelST 对我影响比较大的一个概念，是“系统里到底什么算数”。</p>
+<p>如果：</p>
+<ul>
+<li>原著写了一种状态；</li>
+<li>历史交互生成了另一种状态；</li>
+<li>当前模型又生成第三种状态；</li>
+</ul>
+<p>那么最终哪一个才是系统真正认可的状态？</p>
+<p>如果没有明确规则，这个系统实际上没有可靠的状态来源。</p>
+<p>因此，我开始尝试区分：</p>
+<ul>
+<li>原始证据；</li>
+<li>当前权威状态；</li>
+<li>模型生成候选；</li>
+<li>已确认的历史记忆。</li>
+</ul>
+<p>这让我逐渐认识到，复杂 AI 应用并不只是：</p>
+<blockquote>
+<p>给模型更多上下文。</p>
+</blockquote>
+<p>它还需要回答很多传统的软件系统问题：</p>
+<blockquote>
+<p>数据存在哪里？
+谁能够修改？
+修改之前怎样验证？
+冲突怎样处理？
+出错以后怎样恢复？</p>
+</blockquote>
+<p>这些问题后来反而成为我在这个项目里最感兴趣的部分。</p>
+<h2><span id="当前状态"></span>当前状态</h2>
+<p>NovelST 目前仍然处于探索和开发阶段，不是已经完成的产品。能够确认的进展是：</p>
+<ul>
+<li>完成了 1070 章原始文本的确定性结构解析，形成约 98,630 个稳定段落；</li>
+<li>在 20 章语义 / compiler 试点中，17 章生成了成功 artifact；</li>
+<li>2 章因语义误标被隔离，另有 1 章尚未运行；</li>
+<li>SQLite、Qdrant、MVU、Memory Books 与候选状态等内容构成当前设计方向，但完整 Canon / Gate 闭环、全书编译与端到端接入尚未完成。</li>
+</ul>
+<p>项目大量借助 AI 编程代理。我主要负责问题定义、架构取舍、约束、Gate 与验收复核；这里不把它描述成独立手写成果。</p>
+<p>其中一些模块已有代码或阶段性试验，另一些仍停留在原型或设计阶段。公开页面只记录能够由现有项目记录支持的状态。</p>
+<h2><span id="这个项目改变了我怎样思考"></span>这个项目改变了我怎样思考</h2>
+<p>NovelST 最开始吸引我的是大语言模型。</p>
+<p>但随着项目逐渐展开，我花在“模型应该用什么提示词”上的注意力反而开始减少，而越来越多地去思考：</p>
+<ul>
+<li>哪些信息应该结构化；</li>
+<li>哪些状态必须有唯一权威来源；</li>
+<li>检索到的证据怎样和状态对应；</li>
+<li>模型生成为什么不能直接修改系统；</li>
+<li>怎样验证一次状态变化；</li>
+<li>一个失败怎样避免影响后续流程。</li>
+</ul>
+<p>这让我开始感觉到，很多 AI 系统真正困难的地方，并不一定是再调用一次更强的模型。</p>
+<p>当系统运行时间变长、数据变多、状态开始相互依赖以后，<strong>怎样让整个系统保持可理解、可检查和可恢复，本身就变成了问题的一部分。</strong></p>
+<p>NovelST 目前没有完成，也还有很多设计需要验证。</p>
+<p>但正因为没有完成，我在这个过程中遇到的问题比一个已经整理好的示例项目更真实。</p>
+<p>它让我第一次比较持续地思考：</p>
+<blockquote>
+<p>一个依赖大语言模型的系统，怎样才能不仅“能生成”，还能够长期维持自己的状态和边界。</p>
+</blockquote>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#项目起点">项目起点</a><a href="#为什么单纯依赖大模型不够">为什么单纯依赖大模型不够</a><a href="#文本与证据">文本与证据</a><a href="#状态与证据分开保存">状态与证据分开保存</a><a href="#当前工作集与长期记忆">当前工作集与长期记忆</a><a href="#结构化生成">结构化生成</a><a href="#为什么需要候选层">为什么需要候选层</a><a href="#失败不是异常情况">失败不是异常情况</a><a href="#我开始关心-权威状态">我开始关心“权威状态”</a><a href="#当前状态">当前状态</a><a href="#这个项目改变了我怎样思考">这个项目改变了我怎样思考</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/projects/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

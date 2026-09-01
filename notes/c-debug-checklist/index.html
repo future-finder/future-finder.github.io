@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="一份从题意、边界、初始化到第一个错误状态的 C 程序排查清单。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="我的 C 语言程序检查与调试清单｜张宏远">
+  <meta property="og:description" content="一份从题意、边界、初始化到第一个错误状态的 C 程序排查清单。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/notes/c-debug-checklist/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>我的 C 语言程序检查与调试清单｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/" aria-current="page">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/notes/">← 返回笔记</a><div class="article-meta"><span>学习记录</span><span>持续整理</span></div><h1>我的 C 语言程序检查与调试清单</h1><p>一份从题意、边界、初始化到第一个错误状态的 C 程序排查清单。</p><div class="tag-row"><span>C</span><span>调试</span><span>检查清单</span></div></header>
+  <div class="article-layout"><div class="prose"><p>刚开始写程序时，我遇到错误后的第一反应通常是重新读代码，试图直接“看出哪里错了”。</p>
+<p>这种方法偶尔有效，但代码稍微复杂一些以后效率很低。尤其在限时编程中，如果没有固定的检查顺序，很容易在一个并非关键的问题上反复修改。</p>
+<p>经过一段时间的数据结构作业、OJ 练习和限时编程训练，我逐渐形成了一套比较固定的检查方法。</p>
+<p>它并不能避免所有错误，但可以让我在程序出现问题时，先排查最常见、最确定的部分。</p>
+<h2><span id="一-先确认是不是把题做错了"></span>一、先确认是不是把题做错了</h2>
+<p>在真正开始调试代码之前，我现在通常会重新检查一次题目。</p>
+<p>主要确认：</p>
+<ul>
+<li>输入到底是什么；</li>
+<li>输出要求是什么；</li>
+<li>是否存在特殊情况；</li>
+<li>有没有遗漏某个操作；</li>
+<li>自己实现的逻辑是否真的对应题意。</li>
+</ul>
+<p>这一层非常容易被忽略。</p>
+<p>因为一旦代码已经写了几十行，人很容易默认自己的理解一定是对的，然后开始在实现细节里寻找错误。</p>
+<p>但有些问题从一开始就不是“代码写错”，而是“实现了一个和题目不完全相同的问题”。</p>
+<p>所以我现在会把：</p>
+<blockquote>
+<p><strong>题意错误</strong></p>
+</blockquote>
+<p>和：</p>
+<blockquote>
+<p><strong>实现错误</strong></p>
+</blockquote>
+<p>分开处理。</p>
+<p>如果前者没有确认，后面的调试可能全部是在错误方向上工作。</p>
+<h2><span id="二-先手动跑最小样例"></span>二、先手动跑最小样例</h2>
+<p>如果题意基本确认，我不会马上加很多测试数据，而是先构造尽可能小的情况。</p>
+<p>例如：</p>
+<ul>
+<li>只有一个元素；</li>
+<li>两个元素；</li>
+<li>空结构；</li>
+<li>只有一次操作；</li>
+<li>所有条件刚好处于边界。</li>
+</ul>
+<p>小样例最大的好处是：</p>
+<p><strong>我能够完整地知道程序每一步本来应该发生什么。</strong></p>
+<p>如果一个程序在几十个元素的输入上得到错误结果，很难直接知道问题从哪里开始。</p>
+<p>但如果只有两个元素，就可以手动追踪：</p>
+<blockquote>
+<p>当前变量是什么？
+指针在哪里？
+栈顶在哪里？
+下一步应该进入哪个分支？</p>
+</blockquote>
+<p>很多错误在最小样例里反而更容易暴露。</p>
+<h2><span id="三-专门测试边界-而不是只测-正常情况"></span>三、专门测试边界，而不是只测“正常情况”</h2>
+<p>我以前比较容易犯的一个错误，是样例过了以后就默认程序大致正确。</p>
+<p>但后来遇到的很多问题都集中在边界：</p>
+<ul>
+<li>数组第一个或最后一个元素；</li>
+<li>空栈、空队列；</li>
+<li>链表头尾；</li>
+<li>循环最后一次；</li>
+<li>只有一个节点；</li>
+<li>没有满足条件的元素；</li>
+<li>所有元素都满足条件。</li>
+</ul>
+<p>因此现在我会专门问：</p>
+<blockquote>
+<p><strong>如果数据刚好走到结构边界，会发生什么？</strong></p>
+</blockquote>
+<p>尤其是循环，我会检查：</p>
+<pre><code class="language-c">i &lt; n
+</code></pre>
+<p>和：</p>
+<pre><code class="language-c">i &lt;= n
+</code></pre>
+<p>到底哪个才符合当前逻辑。</p>
+<p>很多程序主体没有问题，真正出错的是最后一个元素没有处理，或者循环多运行了一次。</p>
+<h2><span id="四-检查初始化"></span>四、检查初始化</h2>
+<p>这是另一类非常普通但高频的问题。</p>
+<p>我会重点检查：</p>
+<ul>
+<li>计数器是否清零；</li>
+<li>数组是否正确初始化；</li>
+<li>指针初始位置是否合理；</li>
+<li>栈顶、队首、队尾初值；</li>
+<li>标记数组是否初始化；</li>
+<li>局部变量是否在第一次使用前赋值。</li>
+</ul>
+<p>这类错误通常不会让代码结构看起来“不对”。</p>
+<p>相反，代码可能很正常，只是某个变量从一开始就处于错误状态。</p>
+<p>因此如果程序表现非常奇怪，我现在会优先检查：</p>
+<blockquote>
+<p>第一次进入主循环以前，所有关键状态是什么？</p>
+</blockquote>
+<h2><span id="五-检查-最后一次状态结算"></span>五、检查“最后一次状态结算”</h2>
+<p>这是我后来单独加入清单的一项。</p>
+<p>有些程序会在循环内部处理“前一个完整状态”，因此循环结束以后还需要再处理一次最后剩下的内容。</p>
+<p>例如：</p>
+<ul>
+<li>最后一段字符串；</li>
+<li>最后一个区间；</li>
+<li>最后一个统计块；</li>
+<li>链表最后一个节点；</li>
+<li>表达式结束后剩余的运算符。</li>
+</ul>
+<p>这类错误的特点是：</p>
+<blockquote>
+<p>前面所有数据都正确，只有最后一部分出错。</p>
+</blockquote>
+<p>如果结果“几乎正确”，我现在会首先检查这里。</p>
+<h2><span id="六-输入输出也属于程序逻辑"></span>六、输入输出也属于程序逻辑</h2>
+<p>以前我更关注算法主体，容易把 <code>scanf</code>、字符读取和换行看成外围问题。</p>
+<p>实际上很多错误就发生在输入阶段。</p>
+<p>我会检查：</p>
+<ul>
+<li><code>%d</code>、<code>%c</code>、<code>%s</code> 是否和变量类型一致；</li>
+<li>字符和整数混合读取时是否留下换行；</li>
+<li>是否正确处理负数；</li>
+<li>是否可能读到 EOF；</li>
+<li>字符串边界是否正确；</li>
+<li>输出格式有没有多余空格或换行。</li>
+</ul>
+<p>尤其是：</p>
+<pre><code class="language-c">scanf(&quot;%c&quot;, &amp;ch);
+</code></pre>
+<p>这种字符读取，前一次输入遗留的换行很容易产生干扰。</p>
+<p>如果程序逻辑看起来完全正确，但样例表现异常，输入是很值得优先排查的一层。</p>
+<h2><span id="七-数据结构题先画-状态-再盯代码"></span>七、数据结构题先画“状态”，再盯代码</h2>
+<p>链表、栈、队列、树这类题里，我发现单纯盯着代码并不总是有效。</p>
+<p>例如循环链表出现错误时，我更愿意先画：</p>
+<pre><code class="language-text">prev → curr → next
+</code></pre>
+<p>然后检查一次操作之后应该变成什么。</p>
+<p>类似地，栈的问题可以先写出：</p>
+<pre><code class="language-text">top = ?
+stack[0 ... top]
+</code></pre>
+<p>如果自己都无法清楚说出某一步之后的数据结构状态，那么继续改代码往往只是猜。</p>
+<p>因此我现在更倾向于：</p>
+<blockquote>
+<p><strong>先确认状态转移，再确认代码是否实现了这个状态转移。</strong></p>
+</blockquote>
+<h2><span id="八-寻找-第一个错误状态"></span>八、寻找“第一个错误状态”</h2>
+<p>如果简单检查没有解决问题，我会开始使用调试器。</p>
+<p>相比看到最终答案错误，我更关心：</p>
+<blockquote>
+<p><strong>程序从哪一步开始第一次偏离预期？</strong></p>
+</blockquote>
+<p>常用的方法包括：</p>
+<ul>
+<li>断点；</li>
+<li>单步执行；</li>
+<li>Variables；</li>
+<li>Watch；</li>
+<li>临时输出关键变量。</li>
+</ul>
+<p>例如程序循环 100 次以后出错，我不会先研究第 100 次为什么错。</p>
+<p>我会寻找：</p>
+<blockquote>
+<p>第一次出现异常的是第几次？</p>
+</blockquote>
+<p>如果第 17 次开始异常，那么第 18 到 100 次的错误通常只是后续结果。</p>
+<p>这种思路能明显缩小调试范围。</p>
+<h2><span id="九-能做差分测试时-就不要只靠肉眼"></span>九、能做差分测试时，就不要只靠肉眼</h2>
+<p>如果一道题可以写出简单但较慢的正确算法，我会尽量用它和正式程序进行差分测试。</p>
+<p>基本思路是：</p>
+<ol>
+<li>随机生成很多组小数据；</li>
+<li>用简单算法得到一个可信结果；</li>
+<li>用待检查程序得到结果；</li>
+<li>自动比较二者；</li>
+<li>找到第一组不同的数据。</li>
+</ol>
+<p>这种方法尤其适合：</p>
+<ul>
+<li>检索；</li>
+<li>排序；</li>
+<li>模拟；</li>
+<li>一些数据结构操作。</li>
+</ul>
+<p>与手工构造样例相比，它能覆盖很多自己没有想到的组合。</p>
+<p>更重要的是，一旦发现错误，会直接得到一组可以复现问题的具体输入。</p>
+<h2><span id="十-限时环境中要设止损点"></span>十、限时环境中要设止损点</h2>
+<p>考试和平时调试有一个很大的不同：时间也是资源。</p>
+<p>如果一道题已经花了很长时间，但我仍然无法确定错误在哪里，那么继续死磕不一定是最好的选择。</p>
+<p>我现在会尝试判断：</p>
+<ul>
+<li>我知道错误大概在哪一层吗？</li>
+<li>再给自己几分钟，有没有明确的排查路径？</li>
+<li>还是已经开始反复修改同一段代码？</li>
+</ul>
+<p>如果进入第三种状态，就应该考虑暂时离开这道题。</p>
+<p>很多时候，换一道更确定的题完成以后，再回来重新看原来的代码，反而更容易发现问题。</p>
+<h2><span id="我现在的检查顺序"></span>我现在的检查顺序</h2>
+<p>如果需要压缩成一份真正能在写题时使用的清单，我目前会按下面的顺序检查：</p>
+<ol>
+<li><strong>题意</strong>：有没有理解错要求；</li>
+<li><strong>输入输出</strong>：读取和格式是否正确；</li>
+<li><strong>最小样例</strong>：最简单的数据是否成立；</li>
+<li><strong>边界样例</strong>：头、尾、空、单元素；</li>
+<li><strong>初始化</strong>：第一次进入循环前状态是否正确；</li>
+<li><strong>循环边界</strong>：有没有多一次或少一次；</li>
+<li><strong>最后状态</strong>：循环结束后是否还有内容需要处理；</li>
+<li><strong>数据结构状态</strong>：指针、栈顶、队首等是否符合预期；</li>
+<li><strong>第一个异常状态</strong>：使用断点或 Watch 定位；</li>
+<li><strong>差分测试</strong>：条件允许时进行自动验证。</li>
+</ol>
+<p>这套方法还在不断调整。</p>
+<p>但相比以前遇到错误后直接重新读完整代码，现在我更愿意把调试理解成一个逐步缩小问题范围的过程。</p>
+<p>很多程序错误本身并不复杂。真正影响效率的，往往是不知道应该先检查哪里。</p>
+<p>如果希望把检查动作放回完整的编写、编译与测试过程，可以继续看<a href="/notes/c-workflow/">《我的 C 语言开发与调试工作流》</a>。</p>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#一-先确认是不是把题做错了">一、先确认是不是把题做错了</a><a href="#二-先手动跑最小样例">二、先手动跑最小样例</a><a href="#三-专门测试边界-而不是只测-正常情况">三、专门测试边界，而不是只测“正常情况”</a><a href="#四-检查初始化">四、检查初始化</a><a href="#五-检查-最后一次状态结算">五、检查“最后一次状态结算”</a><a href="#六-输入输出也属于程序逻辑">六、输入输出也属于程序逻辑</a><a href="#七-数据结构题先画-状态-再盯代码">七、数据结构题先画“状态”，再盯代码</a><a href="#八-寻找-第一个错误状态">八、寻找“第一个错误状态”</a><a href="#九-能做差分测试时-就不要只靠肉眼">九、能做差分测试时，就不要只靠肉眼</a><a href="#十-限时环境中要设止损点">十、限时环境中要设止损点</a><a href="#我现在的检查顺序">我现在的检查顺序</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/notes/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

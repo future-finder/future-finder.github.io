@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="记录在 RAGTruth 上复现 LettuceDetect 的训练、评测与结果分析过程。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="LettuceDetect：RAGTruth 上的复现与评测｜张宏远">
+  <meta property="og:description" content="记录在 RAGTruth 上复现 LettuceDetect 的训练、评测与结果分析过程。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/research/lettucedetect/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>LettuceDetect：RAGTruth 上的复现与评测｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/" aria-current="page">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/research/">← 返回研究</a><div class="article-meta"><span>研究实践</span><span>实验于 2026 年 8 月</span></div><h1>LettuceDetect：RAGTruth 上的复现与评测</h1><p>记录在 RAGTruth 上复现 LettuceDetect 的训练、评测与结果分析过程。</p><div class="tag-row"><span>ModernBERT-base</span><span>RAGTruth</span><span>幻觉检测</span></div></header>
+  <div class="article-layout"><div class="prose"><h2><span id="项目概述"></span>项目概述</h2>
+<p>大一下学期开始接触大语言模型幻觉检测后，我逐渐从论文阅读进入实际实验。LettuceDetect 是其中一次比较完整的复现实践。</p>
+<p>这次工作的目标很明确：使用 LettuceDetect 的 ModernBERT-base 方案，在 RAGTruth 数据集上完成训练和评测，并检查能否得到与论文报告接近的结果。</p>
+<p>整个过程中，我先理解任务和数据，再配置实验环境、训练模型、运行完整测试集，最后整理指标并比较不同任务上的表现。</p>
+<p>相比单独理解某个模型结构，这次实践让我第一次真正接触到一条完整的实验链路。</p>
+<h2><span id="任务与数据"></span>任务与数据</h2>
+<p>实验使用 <strong>RAGTruth</strong> 数据集。</p>
+<p>本次完整测试集共有 <strong>2700 条样本</strong>，由三个任务组成：</p>
+<ul>
+<li>问答：900 条</li>
+<li>数据到文本生成：900 条</li>
+<li>摘要：900 条</li>
+</ul>
+<p>在整理评测流程时，我首先需要弄清楚两个不同粒度的指标。</p>
+<p><strong>Example-level</strong> 判断一整条回答是否包含幻觉。</p>
+<p><strong>Span-level</strong> 则进一步要求定位具体的幻觉文本片段。</p>
+<p>两者看起来都在衡量“幻觉检测”，但实际上对应的任务难度并不一样。前者只需要判断一条回答整体是否有问题，后者还要判断问题具体出现在哪里。</p>
+<p>这个区别后来也帮助我理解为什么 Span-level 的指标明显低于 Example-level。</p>
+<h2><span id="实验设置"></span>实验设置</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>设置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>模型</td>
+<td>ModernBERT-base</td>
+</tr>
+<tr>
+<td>数据集</td>
+<td>RAGTruth</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.11</td>
+</tr>
+<tr>
+<td>CUDA</td>
+<td>13.0</td>
+</tr>
+<tr>
+<td>训练轮数</td>
+<td>6</td>
+</tr>
+<tr>
+<td>学习率</td>
+<td>1e-5</td>
+</tr>
+<tr>
+<td>batch size</td>
+<td>4</td>
+</tr>
+<tr>
+<td>训练时间</td>
+<td>1:20:09</td>
+</tr>
+</tbody></table>
+<p>最初按照 batch size 为 8 运行时出现了显存不足，因此随后调整为 4，训练能够正常完成。</p>
+<p>这是一个很普通的问题，但它让我开始意识到，论文中的实验配置并不是脱离实际运行环境存在的。相同的方法最终仍然要落实到具体的显存、依赖、数据和代码环境中。</p>
+<p>复现过程中真正需要处理的，也不只是模型本身。</p>
+<h2><span id="复现过程"></span>复现过程</h2>
+<p>整个过程大致可以分成几个阶段：</p>
+<p><strong>理解论文和代码 → 配置环境 → 准备数据 → 训练模型 → 完整评测 → 分析结果</strong></p>
+<p>前期主要解决三个问题：</p>
+<ol>
+<li>LettuceDetect 实际解决的是什么任务；</li>
+<li>RAGTruth 的数据和标注是怎样组织的；</li>
+<li>训练代码与评测代码之间的数据是怎样流动的。</li>
+</ol>
+<p>训练完成后，我在 RAGTruth 的 <strong>2700 条完整测试数据</strong>上进行了评测，而不是只运行少量样例。</p>
+<p>得到总体结果后，我又分别观察问答、数据到文本生成和摘要三种任务上的表现。</p>
+<p>到这个阶段，我关注的问题已经从：</p>
+<blockquote>
+<p>模型能不能运行？</p>
+</blockquote>
+<p>逐渐变成：</p>
+<blockquote>
+<p>这个结果具体是怎样得到的？它说明了什么？</p>
+</blockquote>
+<p>这也是这次复现过程中比较明显的一次认识变化。</p>
+<h2><span id="实验结果"></span>实验结果</h2>
+<p>主要结果如下：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>本次复现</th>
+<th>论文 Base</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Example-level F1</td>
+<td>76.74</td>
+<td>76.07</td>
+</tr>
+<tr>
+<td>Span-level F1</td>
+<td>55.59</td>
+<td>55.44</td>
+</tr>
+</tbody></table>
+<p>Example-level 的 Precision / Recall / F1 为：</p>
+<p><strong>76.18 / 77.31 / 76.74</strong></p>
+<p>Span-level 的 Precision / Recall / F1 为：</p>
+<p><strong>58.76 / 52.75 / 55.59</strong></p>
+<p>开发集上记录到的最佳 token-level hallucination F1 为：</p>
+<p><strong>0.5990</strong></p>
+<p>从最终结果来看，本次复现与论文中的 base 模型结果非常接近。</p>
+<p>Example-level F1 相差约 0.67 个百分点，Span-level F1 相差约 0.15 个百分点。</p>
+<p>这个结果基本说明训练和评测的主要链路已经正确复现。如此小的指标差异本身没有必要作进一步解读，因为它不足以说明方法性能发生了有意义的提升。</p>
+<h2><span id="不同任务上的差异"></span>不同任务上的差异</h2>
+<p>总体 F1 只是实验结果的一部分。</p>
+<p>把结果拆分到三个任务以后，可以看到 <strong>Data-to-text 的表现相对较好，而 Summary 更困难</strong>。</p>
+<p>其中 Summary 任务的幻觉类别 Recall 为：</p>
+<p><strong>0.4902</strong></p>
+<p>也就是说，在摘要任务中，模型仍然漏掉了相当一部分真实幻觉。</p>
+<p>这个结果让我开始注意到一个以前很容易忽略的问题：</p>
+<p><strong>一个总体指标正常，并不意味着模型在所有类型的数据上都表现稳定。</strong></p>
+<p>如果只记录最终的 overall F1，就很容易把任务之间的差异压缩成一个数字。</p>
+<p>因此，在后面的实验中，我开始更加关注三个问题：</p>
+<ul>
+<li>指标到底在衡量什么；</li>
+<li>数据由哪些不同类型的任务组成；</li>
+<li>错误主要集中在哪些数据和类别上。</li>
+</ul>
+<p>这比单独追踪一个最终分数更能帮助我理解模型。</p>
+<h2><span id="实验过程中遇到的问题"></span>实验过程中遇到的问题</h2>
+<p>这次复现并没有遇到特别复杂的问题，但实际运行过程中存在不少需要逐项处理的细节。</p>
+<p>例如：</p>
+<ul>
+<li>Python、CUDA 和 Conda 环境需要正确配置；</li>
+<li>模型、代码和数据路径需要保持一致；</li>
+<li>batch size 受到实际显存约束；</li>
+<li>训练完成后还需要确认评测脚本读取的模型和数据是否正确；</li>
+<li>Example-level 与 Span-level 使用不同的评测粒度，不能混为一个指标理解。</li>
+</ul>
+<p>这些问题单独来看都不难。</p>
+<p>但把它们放在一起以后，我逐渐意识到：</p>
+<p><strong>一次实验是否可信，并不只由模型代码决定。</strong></p>
+<p>环境、数据、资源配置、训练过程和评测口径中的任何一个环节出现偏差，都可能让最终得到的数字失去意义。</p>
+<p>这也是我第一次比较具体地认识到“实验可复现性”到底意味着什么。</p>
+<h2><span id="我从这次复现中学到什么"></span>我从这次复现中学到什么</h2>
+<p>开始这项工作时，我主要关心的是模型方法本身。</p>
+<p>做完以后，我对实验的关注范围明显扩大了。</p>
+<p>现在再看一个方法，我会先尝试回答下面几个问题：</p>
+<ol>
+<li>它到底在解决什么任务？</li>
+<li>输入和输出是怎样定义的？</li>
+<li>数据是怎样构造和标注的？</li>
+<li>训练目标是什么？</li>
+<li>最后的指标具体衡量什么？</li>
+<li>论文中的方法描述是怎样一步步变成最终实验结果的？</li>
+</ol>
+<p>这种变化对我来说比最终得到某个 F1 更重要。</p>
+<p>因为只有理解完整的实验链路，我才能判断一个结果为什么成立，也才能继续分析它在哪些情况下会失败。</p>
+<p>LettuceDetect 是我第一次比较完整地把论文、代码、环境、训练、评测和结果分析连接起来。它也让我开始把注意力从“模型本身”扩展到支撑模型实验的整个系统。</p>
+<h2><span id="当前进展"></span>当前进展</h2>
+<p>目前已经完成的是：</p>
+<ul>
+<li>ModernBERT-base 的训练；</li>
+<li>RAGTruth 2700 条测试数据上的完整评测；</li>
+<li>Example-level 与 Span-level 指标整理；</li>
+<li>三类任务结果的初步比较。</li>
+</ul>
+<p>当前这份页面只记录这些已经完成并能够确认的实验。</p>
+<p>后续如果继续推进，我更希望进一步分析不同任务之间性能差异产生的原因，并理解模型具体在哪些类型的幻觉上更容易失败。关于数据集任务与评测粒度的整理，见<a href="/research/ragtruth/">《理解 RAGTruth》</a>。</p>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#项目概述">项目概述</a><a href="#任务与数据">任务与数据</a><a href="#实验设置">实验设置</a><a href="#复现过程">复现过程</a><a href="#实验结果">实验结果</a><a href="#不同任务上的差异">不同任务上的差异</a><a href="#实验过程中遇到的问题">实验过程中遇到的问题</a><a href="#我从这次复现中学到什么">我从这次复现中学到什么</a><a href="#当前进展">当前进展</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/research/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>

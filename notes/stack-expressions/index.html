@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="用栈处理表达式：从中缀到后缀｜张宏远">
+  <meta property="og:description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。">
+  <meta property="og:site_name" content="张宏远">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://future-finder.github.io/notes/stack-expressions/">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
+  <link rel="stylesheet" href="/assets/site.css">
+  <title>用栈处理表达式：从中缀到后缀｜张宏远</title>
+</head><body>
+<a class="skip-link" href="#main">跳到主要内容</a>
+<header class="site-header">
+  <div class="shell nav-wrap">
+    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
+    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/" aria-current="page">笔记</a><a href="/about/">关于</a></nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
+  </div>
+</header>
+<div class="reading-progress" aria-hidden="true"></div>
+<main id="main"><article class="article shell">
+  <header class="article-header"><a class="back-link" href="/notes/">← 返回笔记</a><div class="article-meta"><span>学习记录</span><span>课程学习记录</span></div><h1>用栈处理表达式：从中缀到后缀</h1><p>从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。</p><div class="tag-row"><span>数据结构</span><span>栈</span><span>表达式</span></div></header>
+  <div class="article-layout"><div class="prose"><p>学习栈的时候，我最开始对它的理解基本停留在“后进先出”。</p>
+<p>这个定义当然没有错，但真正开始写表达式相关的题以后，我才逐渐理解为什么栈会反复出现在这一类问题中。</p>
+<p>普通数学表达式，例如：</p>
+<pre><code class="language-text">3 + 4 * 2
+</code></pre>
+<p>不能简单地从左到右计算，因为不同运算符有不同的优先级。</p>
+<p>如果再加入括号：</p>
+<pre><code class="language-text">(3 + 4) * 2
+</code></pre>
+<p>计算顺序又会发生变化。</p>
+<p>因此，表达式处理真正需要解决的问题不是“如何计算加减乘除”，而是：</p>
+<blockquote>
+<p><strong>怎样把运算顺序准确地表示出来。</strong></p>
+</blockquote>
+<p>栈正好适合保存那些“已经遇到，但暂时还不能处理”的运算符。</p>
+<h2><span id="一-中缀表达式为什么比较麻烦"></span>一、中缀表达式为什么比较麻烦</h2>
+<p>平时书写的表达式一般都是中缀形式：</p>
+<pre><code class="language-text">a + b * c
+</code></pre>
+<p>运算符位于两个操作数之间。</p>
+<p>人可以直接根据优先级理解成：</p>
+<pre><code class="language-text">a + (b * c)
+</code></pre>
+<p>但程序必须把这个规则明确写出来。</p>
+<p>至少需要处理：</p>
+<ul>
+<li>运算符优先级；</li>
+<li>左右结合；</li>
+<li>括号；</li>
+<li>当前运算符和此前运算符之间的关系。</li>
+</ul>
+<p>所以中缀表达式对人比较自然，但并不是最适合程序直接计算的形式。</p>
+<h2><span id="二-后缀表达式"></span>二、后缀表达式</h2>
+<p>同一个表达式：</p>
+<pre><code class="language-text">a + b * c
+</code></pre>
+<p>写成后缀形式是：</p>
+<pre><code class="language-text">a b c * +
+</code></pre>
+<p>这里不再需要显式表示优先级。</p>
+<p>按照从左到右的顺序计算：</p>
+<ol>
+<li>遇到 <code>a</code>，保存；</li>
+<li>遇到 <code>b</code>，保存；</li>
+<li>遇到 <code>c</code>，保存；</li>
+<li>遇到 <code>*</code>，取出 <code>b</code> 和 <code>c</code> 计算；</li>
+<li>遇到 <code>+</code>，再计算 <code>a + (b*c)</code>。</li>
+</ol>
+<p>运算顺序已经包含在表达式自身的排列中。</p>
+<p>这也是我觉得后缀表达式很有意思的地方：</p>
+<blockquote>
+<p><strong>原来需要由优先级规则决定的执行顺序，被转换成了一个可以直接顺序处理的结构。</strong></p>
+</blockquote>
+<h2><span id="三-后缀表达式怎样求值"></span>三、后缀表达式怎样求值</h2>
+<p>后缀表达式求值比较直接，只需要一个操作数栈。</p>
+<p>例如：</p>
+<pre><code class="language-text">3 4 2 * +
+</code></pre>
+<p>开始时栈为空。</p>
+<p>读到：</p>
+<pre><code class="language-text">3
+</code></pre>
+<p>压栈：</p>
+<pre><code class="language-text">3
+</code></pre>
+<p>读到：</p>
+<pre><code class="language-text">4
+</code></pre>
+<p>得到：</p>
+<pre><code class="language-text">3 4
+</code></pre>
+<p>再读到：</p>
+<pre><code class="language-text">2
+</code></pre>
+<p>得到：</p>
+<pre><code class="language-text">3 4 2
+</code></pre>
+<p>读到 <code>*</code> 时，从栈中取出两个操作数：</p>
+<pre><code class="language-text">4 * 2 = 8
+</code></pre>
+<p>把 8 压回栈：</p>
+<pre><code class="language-text">3 8
+</code></pre>
+<p>最后读到 <code>+</code>：</p>
+<pre><code class="language-text">3 + 8 = 11
+</code></pre>
+<p>最终栈中只剩：</p>
+<pre><code class="language-text">11
+</code></pre>
+<p>因此基本规则可以概括为：</p>
+<h3><span id="遇到操作数"></span>遇到操作数</h3>
+<p>压栈。</p>
+<h3><span id="遇到运算符"></span>遇到运算符</h3>
+<p>连续弹出两个操作数，完成运算，再把结果压回栈。</p>
+<h2><span id="四-一个很容易写错的地方-操作数顺序"></span>四、一个很容易写错的地方：操作数顺序</h2>
+<p>如果运算符是：</p>
+<pre><code class="language-text">+
+</code></pre>
+<p>或者：</p>
+<pre><code class="language-text">*
+</code></pre>
+<p>交换两个操作数通常不会立即暴露问题。</p>
+<p>例如：</p>
+<pre><code class="language-text">3 + 5
+</code></pre>
+<p>和：</p>
+<pre><code class="language-text">5 + 3
+</code></pre>
+<p>结果一样。</p>
+<p>但减法和除法不满足交换律。</p>
+<p>假设栈顶依次弹出：</p>
+<pre><code class="language-text">a
+b
+</code></pre>
+<p>那么真正应该计算的是：</p>
+<pre><code class="language-text">b - a
+</code></pre>
+<p>而不是：</p>
+<pre><code class="language-text">a - b
+</code></pre>
+<p>因此我后来更习惯明确写成：</p>
+<pre><code class="language-c">right = pop();
+left = pop();
+
+result = left - right;
+</code></pre>
+<p>而不是写两个含义不清楚的临时变量。</p>
+<p>变量名本身就可以减少一部分顺序错误。</p>
+<h2><span id="五-中缀转后缀真正难在哪里"></span>五、中缀转后缀真正难在哪里</h2>
+<p>相比后缀表达式求值，中缀转后缀要复杂一些。</p>
+<p>原因是需要在扫描表达式的过程中决定：</p>
+<blockquote>
+<p>当前运算符现在输出，还是暂时留在栈中？</p>
+</blockquote>
+<p>这里需要另一个栈：</p>
+<p><strong>运算符栈。</strong></p>
+<p>如果读到操作数，可以直接加入后缀表达式。</p>
+<p>如果读到运算符，则需要和当前栈顶运算符比较优先级。</p>
+<h2><span id="六-基本处理规则"></span>六、基本处理规则</h2>
+<p>我目前使用的思路可以概括为：</p>
+<h3><span id="操作数"></span>操作数</h3>
+<p>直接输出。</p>
+<p>例如读到：</p>
+<pre><code class="language-text">a
+</code></pre>
+<p>直接放入后缀表达式。</p>
+<h3><span id="左括号"></span>左括号</h3>
+<p>直接压入运算符栈。</p>
+<pre><code class="language-text">(
+</code></pre>
+<p>它相当于建立了一个新的优先级边界。</p>
+<h3><span id="右括号"></span>右括号</h3>
+<p>不断弹出运算符并输出，直到遇到对应的左括号。</p>
+<p>最后左右括号本身都不进入后缀表达式。</p>
+<h3><span id="普通运算符"></span>普通运算符</h3>
+<p>比较它和栈顶运算符的优先级。</p>
+<p>如果栈顶运算符应该先执行，就将栈顶弹出并输出。</p>
+<p>继续比较，直到当前运算符可以入栈。</p>
+<h3><span id="表达式结束"></span>表达式结束</h3>
+<p>把运算符栈中剩余的运算符依次弹出。</p>
+<h2><span id="七-用一个例子走完整过程"></span>七、用一个例子走完整过程</h2>
+<p>例如：</p>
+<pre><code class="language-text">a + b * c
+</code></pre>
+<p>读取 <code>a</code>：</p>
+<pre><code class="language-text">输出：a
+运算符栈：空
+</code></pre>
+<p>读取 <code>+</code>：</p>
+<pre><code class="language-text">输出：a
+运算符栈：+
+</code></pre>
+<p>读取 <code>b</code>：</p>
+<pre><code class="language-text">输出：a b
+运算符栈：+
+</code></pre>
+<p>读取 <code>*</code>。</p>
+<p>因为 <code>*</code> 的优先级高于 <code>+</code>，暂时不能执行 <code>+</code>，因此：</p>
+<pre><code class="language-text">输出：a b
+运算符栈：+ *
+</code></pre>
+<p>读取 <code>c</code>：</p>
+<pre><code class="language-text">输出：a b c
+运算符栈：+ *
+</code></pre>
+<p>表达式结束以后依次弹栈：</p>
+<pre><code class="language-text">a b c * +
+</code></pre>
+<p>这就是最终的后缀表达式。</p>
+<h2><span id="八-括号的作用其实是改变-什么时候处理"></span>八、括号的作用其实是改变“什么时候处理”</h2>
+<p>例如：</p>
+<pre><code class="language-text">(a + b) * c
+</code></pre>
+<p>如果没有括号，<code>*</code> 会先于 <code>+</code>。</p>
+<p>但是读到左括号以后，可以把它理解成：</p>
+<blockquote>
+<p>在右括号出现以前，括号内部形成一个暂时独立的处理区域。</p>
+</blockquote>
+<p>因此：</p>
+<pre><code class="language-text">a + b
+</code></pre>
+<p>会先转换成：</p>
+<pre><code class="language-text">a b +
+</code></pre>
+<p>再和外部的：</p>
+<pre><code class="language-text">* c
+</code></pre>
+<p>组合。</p>
+<p>最终：</p>
+<pre><code class="language-text">a b + c *
+</code></pre>
+<p>从程序实现角度看，括号本身不会进入最终的后缀表达式。</p>
+<p>它的作用主要是改变运算符栈的弹出时机。</p>
+<p>这个理解对我来说比单纯背：</p>
+<blockquote>
+<p>左括号入栈，右括号弹栈</p>
+</blockquote>
+<p>更清楚。</p>
+<h2><span id="九-我写这类程序时会特别检查什么"></span>九、我写这类程序时会特别检查什么</h2>
+<p>表达式问题里，我比较容易出错的地方主要有下面几个。</p>
+<h3><span id="1.-数字不一定只有一位"></span>1. 数字不一定只有一位</h3>
+<p>例如：</p>
+<pre><code class="language-text">123 + 45
+</code></pre>
+<p>不能把：</p>
+<pre><code class="language-text">1
+2
+3
+</code></pre>
+<p>当成三个操作数。</p>
+<p>因此扫描字符串时，需要识别一个完整的数字区间。</p>
+<h3><span id="2.-负数和减号不一定是一回事"></span>2. 负数和减号不一定是一回事</h3>
+<p>例如：</p>
+<pre><code class="language-text">-5
+</code></pre>
+<p>中的 <code>-</code> 表示负号。</p>
+<p>但：</p>
+<pre><code class="language-text">8 - 5
+</code></pre>
+<p>中的 <code>-</code> 是二元减法运算符。</p>
+<p>如果题目允许负数，就需要根据上下文区分二者。</p>
+<h3><span id="3.-括号是否匹配"></span>3. 括号是否匹配</h3>
+<p>出现：</p>
+<pre><code class="language-text">(
+</code></pre>
+<p>以后是否一定存在对应的：</p>
+<pre><code class="language-text">)
+</code></pre>
+<p>如果题目没有保证输入合法，就需要额外处理。</p>
+<h3><span id="4.-栈是否为空"></span>4. 栈是否为空</h3>
+<p>任何 <code>pop</code> 操作之前，都应该明确当前栈中是否真的存在足够的元素。</p>
+<p>后缀表达式中的一个二元运算符至少需要两个操作数。</p>
+<h3><span id="5.-表达式结束后有没有清空运算符栈"></span>5. 表达式结束后有没有清空运算符栈</h3>
+<p>循环读完字符并不代表转换结束。</p>
+<p>运算符栈中可能还有尚未输出的运算符。</p>
+<p>这是很容易漏掉的一步。</p>
+<h2><span id="十-双栈直接求中缀表达式"></span>十、双栈直接求中缀表达式</h2>
+<p>除了：</p>
+<pre><code class="language-text">中缀 → 后缀 → 求值
+</code></pre>
+<p>还可以直接使用两个栈：</p>
+<ul>
+<li>操作数栈；</li>
+<li>运算符栈。</li>
+</ul>
+<p>在扫描中缀表达式时，一旦确定某个运算符应该执行，就立即从操作数栈中取出对应数字计算，再把结果压回。</p>
+<p>从实现上看，这相当于把：</p>
+<blockquote>
+<p>中缀转后缀</p>
+</blockquote>
+<p>和：</p>
+<blockquote>
+<p>后缀求值</p>
+</blockquote>
+<p>两个过程合并到了一次扫描中。</p>
+<p>我在学习这两种方法以后觉得，它们背后的核心逻辑其实很接近：</p>
+<blockquote>
+<p><strong>操作数暂存，尚未到执行时机的运算符也暂存；一旦执行顺序确定，就完成一次归约。</strong></p>
+</blockquote>
+<p>只是一个先生成显式的后缀表达式，一个直接完成计算。</p>
+<h2><span id="十一-栈在这里真正保存的是什么"></span>十一、栈在这里真正保存的是什么</h2>
+<p>学完这些题以后，我对栈的理解不再只是：</p>
+<blockquote>
+<p>后进先出的数据结构。</p>
+</blockquote>
+<p>在表达式问题中，它真正保存的是：</p>
+<blockquote>
+<p><strong>当前已经出现，但执行时机还没有到的状态。</strong></p>
+</blockquote>
+<p>例如运算符栈中的：</p>
+<pre><code class="language-text">+
+</code></pre>
+<p>不是“不处理”。</p>
+<p>而是：</p>
+<blockquote>
+<p>我已经知道这个运算存在，只是必须等优先级更高的部分处理结束。</p>
+</blockquote>
+<p>这种“暂存尚未完成的状态”的特点，也解释了为什么栈会出现在：</p>
+<ul>
+<li>表达式；</li>
+<li>括号匹配；</li>
+<li>函数调用；</li>
+<li>DFS；</li>
+<li>回溯</li>
+</ul>
+<p>等很多问题中。</p>
+<p>对我来说，这比单独记住某一道表达式题的模板更有价值。</p>
+<h2><span id="当前整理"></span>当前整理</h2>
+<p>目前我在表达式相关问题中主要练习过：</p>
+<ul>
+<li>括号匹配；</li>
+<li>后缀表达式求值；</li>
+<li>中缀转后缀；</li>
+<li>双栈表达式求值；</li>
+<li>后缀转中缀。</li>
+</ul>
+<p>这些问题虽然形式不同，但大部分都围绕同一件事：</p>
+<blockquote>
+<p><strong>怎样利用栈保存暂时不能完成的操作，并在合适的时机恢复和处理。</strong></p>
+</blockquote>
+<p>理解这一点以后，再遇到新的栈题时，我会先尝试判断：</p>
+<blockquote>
+<p>当前有哪些信息已经出现，但必须暂时保存，等之后某个条件满足以后再处理？</p>
+</blockquote>
+<p>这个问题往往比“这道题是不是一道栈题”更有帮助。</p>
+</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#一-中缀表达式为什么比较麻烦">一、中缀表达式为什么比较麻烦</a><a href="#二-后缀表达式">二、后缀表达式</a><a href="#三-后缀表达式怎样求值">三、后缀表达式怎样求值</a><a href="#四-一个很容易写错的地方-操作数顺序">四、一个很容易写错的地方：操作数顺序</a><a href="#五-中缀转后缀真正难在哪里">五、中缀转后缀真正难在哪里</a><a href="#六-基本处理规则">六、基本处理规则</a><a href="#七-用一个例子走完整过程">七、用一个例子走完整过程</a><a href="#八-括号的作用其实是改变-什么时候处理">八、括号的作用其实是改变“什么时候处理”</a><a href="#九-我写这类程序时会特别检查什么">九、我写这类程序时会特别检查什么</a><a href="#十-双栈直接求中缀表达式">十、双栈直接求中缀表达式</a><a href="#十一-栈在这里真正保存的是什么">十一、栈在这里真正保存的是什么</a><a href="#当前整理">当前整理</a></nav></details></aside></div>
+  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/notes/">返回栏目 ↑</a></footer>
+</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
+<script src="/assets/site.js" defer></script>
+</body></html>
