@@ -1,0 +1,1 @@
+var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-back-top]`);if(!n)return;let r=()=>n.toggleAttribute(`data-visible`,scrollY>700);addEventListener(`scroll`,r,{passive:!0,signal:t}),n.addEventListener(`click`,()=>scrollTo({top:0,behavior:`smooth`}),{signal:t}),r()};t(),document.addEventListener(`astro:page-load`,t);
