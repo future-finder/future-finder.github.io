@@ -1,5 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
+import memoryUrl from '@/assets/memory.svg?url';
 import PostLayout from '@/layouts/PostLayout.astro';
 import { readingTime, statusLabels } from '@/utils/content';
 export async function getStaticPaths() {
@@ -11,7 +12,7 @@ const { Content, headings } = await render(project);
 const links = Object.entries(project.data.links || {}).filter(([, href]) => Boolean(href));
 ---
 <PostLayout title={project.data.title} description={project.data.description} category={`${project.data.type}${project.data.year ? ` · ${project.data.year}` : ''} · ${statusLabels[project.data.status]}`} tags={project.data.tags} minutes={readingTime(project.body || '')} headings={headings}>
-  {project.id === 'novelst' && <figure class="report-figure"><img src={`${import.meta.env.BASE_URL}visuals/memory.svg`} alt="NovelST 结构化状态与长期记忆的设计示意"/><figcaption>架构设计示意 · 项目仍在探索，完整端到端闭环尚未完成。</figcaption></figure>}
+  {project.id === 'novelst' && <figure class="report-figure"><img src={memoryUrl} alt="NovelST 结构化状态与长期记忆的设计示意"/><figcaption>架构设计示意 · 项目仍在探索，完整端到端闭环尚未完成。</figcaption></figure>}
   <Content />
   {links.length > 0 && <div class="project-links"><h2>Links</h2>{links.map(([label, href]) => <a href={href} target="_blank" rel="noreferrer">{label} ↗</a>)}</div>}
 </PostLayout>

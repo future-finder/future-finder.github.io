@@ -18,5 +18,5 @@ export default defineConfig({
     shikiConfig: { theme: 'github-dark-default', wrap: true },
     processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),
   },
-  vite: { plugins: [tailwindcss()] },
+  vite: { plugins: [tailwindcss()], build: { assetsInlineLimit: 0 } },
 });
