@@ -1,34 +1,12 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f4f1ea">
-  <meta name="description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="RLSeek 阅读笔记：从幻觉定位到证据约束｜张宏远">
-  <meta property="og:description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。">
-  <meta property="og:site_name" content="张宏远">
-  <meta name="twitter:card" content="summary">
-  <link rel="canonical" href="https://future-finder.github.io/research/rlseek/">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
-  <link rel="stylesheet" href="/assets/site.css">
-  <title>RLSeek 阅读笔记：从幻觉定位到证据约束｜张宏远</title>
-</head><body>
-<a class="skip-link" href="#main">跳到主要内容</a>
-<header class="site-header">
-  <div class="shell nav-wrap">
-    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
-    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/" aria-current="page">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a><a href="/about/">关于</a></nav>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
-  </div>
-</header>
-<div class="reading-progress" aria-hidden="true"></div>
-<main id="main"><article class="article shell">
-  <header class="article-header"><a class="back-link" href="/research/">← 返回研究</a><div class="article-meta"><span>研究阅读</span><span>阅读于 2026 年 7 月起</span></div><h1>RLSeek 阅读笔记：从幻觉定位到证据约束</h1><p>阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。</p><div class="tag-row"><span>RLSeek</span><span>证据约束</span><span>阅读笔记</span></div></header>
-  <div class="article-layout"><div class="prose"><h2><span id="为什么读-rlseek"></span>为什么读 RLSeek</h2>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.2.10"><meta name="description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。"><meta name="theme-color" content="#f9fbff"><meta property="og:type" content="article"><meta property="og:title" content="RLSeek 阅读笔记：从幻觉定位到证据约束 | Hongyuan Zhang"><meta property="og:description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。"><meta property="og:site_name" content="Hongyuan Zhang"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="RLSeek 阅读笔记：从幻觉定位到证据约束 | Hongyuan Zhang"><meta name="twitter:description" content="阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。"><link rel="canonical" href="https://future-finder.github.io/research/rlseek/"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="alternate" type="application/rss+xml" title="Hongyuan Zhang RSS" href="/rss.xml"><title>RLSeek 阅读笔记：从幻觉定位到证据约束 | Hongyuan Zhang</title><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"RLSeek 阅读笔记：从幻觉定位到证据约束 | Hongyuan Zhang","description":"阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。","url":"https://future-finder.github.io/research/rlseek/","mainEntityOfPage":"https://future-finder.github.io/research/rlseek/"}</script><script>
+      (() => {
+        const saved = localStorage.getItem('theme') || 'light';
+        const dark = saved === 'dark' || (saved === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.themePreference = saved;
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CYDbzu1r.js"></script><style>.reading-progress{z-index:100;background:var(--accent);transform-origin:0;width:100%;height:2px;position:fixed;top:0;left:0;transform:scaleX(0)}.article-shell{padding:135px 0 80px}.article-header{border-bottom:1px solid var(--line);max-width:100%;padding-bottom:34px}.article-header h1{letter-spacing:-.025em;margin:20px 0;font-size:clamp(2rem,4vw,3.1rem);font-weight:500;line-height:1.4}.article-header>p{max-width:680px;color:var(--muted);font-size:1.1rem}.article-meta{color:var(--muted);font:10px/1 var(--font-mono);gap:20px;margin:24px 0 16px;display:flex}.article-grid{grid-template-columns:minmax(0,720px) minmax(0,220px);justify-content:space-between;gap:60px;padding-top:38px;display:grid}.toc{position:relative}.toc details{position:sticky;top:108px}.toc summary{cursor:pointer;color:var(--muted);font:10px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.1em}.toc nav{margin-top:16px;display:grid}.toc a{color:var(--muted);border-left:1px solid var(--line);padding:7px 0 7px 12px;font-size:.8rem;line-height:1.35}.toc a:hover{color:var(--accent);border-color:var(--accent)}.toc a.nested{padding-left:24px}.copy-code{color:#d7ded7;font:9px/1 var(--font-mono);cursor:pointer;background:#0006;border:1px solid #ffffff2e;border-radius:5px;padding:5px 8px;position:absolute;top:10px;right:10px}.article-nav{border-top:1px solid var(--line);grid-template-columns:1fr 1fr;gap:30px;margin-top:90px;padding-top:26px;display:grid}.article-nav a{gap:6px;display:grid}.article-nav span{color:var(--muted);font:9px/1 var(--font-mono);text-transform:uppercase}.article-nav b{font-size:.9rem}.article-nav .next{text-align:right}.related-posts{border-top:1px solid var(--ink);margin-top:70px;padding-top:28px}.related-posts h2{margin:12px 0 22px;font-size:1.4rem}.related-posts>div{grid-template-columns:repeat(3,1fr);gap:12px;display:grid}.related-posts a{border:1px solid var(--line);border-radius:8px;grid-template-rows:auto 1fr auto;min-height:150px;padding:16px;display:grid}.related-posts a:hover{border-color:var(--accent)}.related-posts small{color:var(--accent);font:9px/1 var(--font-mono)}.related-posts b{margin-top:14px;font-size:.88rem}.related-posts a>span{color:var(--muted);justify-self:end}@media (width<=980px){.article-grid{grid-template-columns:1fr;gap:30px}.toc{grid-row:1}.toc details{border:1px solid var(--line);border-radius:8px;padding:15px;position:static}}@media (width<=640px){.article-shell{padding-top:120px}.article-meta{flex-direction:column;gap:8px}.related-posts>div{grid-template-columns:1fr}}
+</style><link rel="stylesheet" href="/_astro/BaseLayout.kC-6CqB2.css"></head><body><a class="skip-link" href="#main-content">跳到主要内容</a><header class="navbar" data-navbar data-astro-cid-l7arcky5><div class="nav-inner" data-astro-cid-l7arcky5><a class="brand" href="/" aria-label="Hongyuan Zhang 首页" data-astro-cid-l7arcky5><span class="brand-name" data-astro-cid-l7arcky5>Hongyuan Zhang <small data-astro-cid-l7arcky5>张宏远</small></span></a><nav class="desktop-nav" aria-label="主导航" data-astro-cid-l7arcky5><a href="/" data-astro-cid-l7arcky5>Home</a><a href="/research" aria-current="page" data-astro-cid-l7arcky5>Research</a><a href="/projects" data-astro-cid-l7arcky5>Projects</a><a href="/notes" data-astro-cid-l7arcky5>Notes</a><a href="/about" data-astro-cid-l7arcky5>About</a></nav><div class="nav-actions" data-astro-cid-l7arcky5><button class="icon-button" type="button" data-search-open aria-label="打开全文搜索" data-astro-cid-l7arcky5><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-search"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><kbd data-astro-cid-l7arcky5>⌘K</kbd></button><button class="theme-toggle" type="button" data-theme-toggle aria-label="切换主题：浅色" title="主题：浅色" data-astro-cid-l6lhmie6><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l6lhmie6="true" class="lucide lucide-sun-moon"><path d="M12 2v2"></path><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"></path><path d="M16 12a4 4 0 0 0-4-4"></path><path d="m19 5-1.256 1.256"></path><path d="M20 12h2"></path></svg><span data-theme-label data-astro-cid-l6lhmie6>Light</span></button><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-theme-toggle]`);if(!n)return;let r=matchMedia(`(prefers-color-scheme: dark)`),i=e=>{let t=e===`dark`||e===`system`&&r.matches;document.documentElement.dataset.theme=t?`dark`:`light`,document.documentElement.dataset.themePreference=e,localStorage.setItem(`theme`,e);let i={system:`Auto`,light:`Light`,dark:`Dark`},a=n.querySelector(`[data-theme-label]`);a&&(a.textContent=i[e]),n.title=`主题：${i[e]}`,n.setAttribute(`aria-label`,`切换主题，当前：${i[e]}`),document.querySelector(`meta[name="theme-color"]`)?.setAttribute(`content`,t?`#111c2b`:`#f9fbff`)};n.addEventListener(`click`,()=>{let e=document.documentElement.dataset.themePreference||`light`;i(e===`system`?`light`:e===`light`?`dark`:`system`)},{signal:t}),r.addEventListener(`change`,()=>{document.documentElement.dataset.themePreference===`system`&&i(`system`)},{signal:t}),i(document.documentElement.dataset.themePreference||`light`)};t(),document.addEventListener(`astro:page-load`,t);</script><button class="icon-button menu-button" type="button" data-menu-toggle aria-label="打开导航菜单" aria-expanded="false" data-astro-cid-l7arcky5><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-menu menu-open"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-x menu-close"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div></div><nav class="mobile-nav" data-mobile-menu aria-label="移动端导航" data-astro-cid-l7arcky5><a href="/" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>01</span>Home</a><a href="/research" aria-current="page" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>02</span>Research</a><a href="/projects" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>03</span>Projects</a><a href="/notes" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>04</span>Notes</a><a href="/about" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>05</span>About</a></nav></header><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-navbar]`),r=document.querySelector(`[data-menu-toggle]`);if(!n||!r)return;let i=()=>n.toggleAttribute(`data-scrolled`,scrollY>24);addEventListener(`scroll`,i,{passive:!0,signal:t}),r.addEventListener(`click`,()=>{let e=!n.hasAttribute(`data-menu-open`);n.toggleAttribute(`data-menu-open`,e),r.setAttribute(`aria-expanded`,String(e)),r.setAttribute(`aria-label`,e?`关闭导航菜单`:`打开导航菜单`)},{signal:t}),n.querySelectorAll(`.mobile-nav a`).forEach(e=>e.addEventListener(`click`,()=>{n.removeAttribute(`data-menu-open`),r.setAttribute(`aria-expanded`,`false`)},{signal:t})),i()};t(),document.addEventListener(`astro:page-load`,t);</script><main id="main-content"><div class="reading-progress" data-reading-progress></div><article class="article-shell shell" data-pagefind-body><header class="article-header"><span class="eyebrow">研究阅读 · 阅读于 2026 年 7 月起 / 9 MIN READ</span><h1 data-pagefind-meta="title">RLSeek 阅读笔记：从幻觉定位到证据约束</h1><p data-pagefind-meta="description">阅读 RLSeek 时对 span 级幻觉定位、证据引用约束和任务边界的整理。</p><div class="tag-list"><a class="tag" href="/tags/RLSeek/">RLSeek</a><a class="tag" href="/tags/%E8%AF%81%E6%8D%AE%E7%BA%A6%E6%9D%9F/">证据约束</a><a class="tag" href="/tags/%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/">阅读笔记</a></div></header><div class="article-grid"><div class="prose"><h2 id="为什么读-rlseek">为什么读 RLSeek</h2>
 <p>在接触大模型幻觉检测以后，我逐渐发现，“检测幻觉”其实是一个很宽泛的说法。</p>
 <p>有的方法只判断一条回答是否存在问题，有的方法需要进一步定位具体的错误片段；还有一些方法会额外要求模型说明自己的判断依据来自哪里。</p>
 <p>RLSeek 比较吸引我的地方，就在于它不仅关注幻觉文本本身，还把<strong>来源证据</strong>纳入了任务设计。</p>
@@ -36,7 +14,7 @@
 <blockquote>
 <p>如果模型认为某段文本是幻觉，它是否也应该说明，这个判断是相对于哪一部分证据得出的？</p>
 </blockquote>
-<h2><span id="任务输入与输出"></span>任务输入与输出</h2>
+<h2 id="任务输入与输出">任务输入与输出</h2>
 <p>按照我目前的理解，RLSeek 的输入主要包含：</p>
 <ul>
 <li>指令；</li>
@@ -53,7 +31,7 @@
 <blockquote>
 <p><strong>具体哪里有问题。</strong></p>
 </blockquote>
-<h2><span id="为什么要做-span-level-检测"></span>为什么要做 Span-level 检测</h2>
+<h2 id="为什么要做-span-level-检测">为什么要做 Span-level 检测</h2>
 <p>如果模型只输出一个整体标签，那么我们只能知道：</p>
 <blockquote>
 <p>这条回答可能存在幻觉。</p>
@@ -73,7 +51,7 @@
 </ul>
 <p>如果把整条回答压缩成一个二分类标签，会丢失很多信息。</p>
 <p>因此，字符级或 span 级的定位能够提供更具体的结果，也为后续分析留下更多空间。</p>
-<h2><span id="证据引用约束"></span>证据引用约束</h2>
+<h2 id="证据引用约束">证据引用约束</h2>
 <p>RLSeek 中另一个让我比较关注的部分，是它没有只要求模型输出幻觉位置，而是进一步引入了对来源证据的引用约束。</p>
 <p>这背后的逻辑很直接：</p>
 <p>如果模型判断某一段文本不被支持，那么这个判断最好能够和具体证据建立联系。</p>
@@ -88,7 +66,7 @@
 </blockquote>
 <p>这使检测结果具备更强的可检查性。</p>
 <p>对我来说，这一点比单纯提高一个检测指标更值得关注，因为它让“模型判断”和“判断依据”之间建立了显式联系。</p>
-<h2><span id="训练信号"></span>训练信号</h2>
+<h2 id="训练信号">训练信号</h2>
 <p>从我的阅读记录来看，RLSeek 使用了 <strong>GRPO 风格的训练方法</strong>。</p>
 <p>训练目标中包含对幻觉 span 检测结果的奖励，同时对证据引用中的问题施加惩罚。</p>
 <p>可以把这个思路粗略理解为：</p>
@@ -105,7 +83,7 @@
 <li>证据引用。</li>
 </ul>
 <p>这种做法比单纯在提示词里要求模型“请同时给出证据”更明确，因为证据行为直接进入了训练目标。</p>
-<h2><span id="span-f1"></span>Span F1</h2>
+<h2 id="span-f1">Span F1</h2>
 <p>RLSeek 的评测中包含字符或 span 级 F1。</p>
 <p>这和我后来在 RAGTruth、LettuceDetect 中接触到的细粒度评测有相似之处。</p>
 <p>它关注的不只是：</p>
@@ -121,7 +99,7 @@
 <p>这也让我逐渐意识到，幻觉检测任务中的“检测”实际上可以分成不同层级：</p>
 <p><strong>回答级判断 → 片段级定位 → 证据级解释</strong></p>
 <p>不同方法解决的可能只是其中某一个层级，因此不能只看到“幻觉检测”四个字就把它们当成同一个任务。</p>
-<h2><span id="我觉得最重要的任务边界"></span>我觉得最重要的任务边界</h2>
+<h2 id="我觉得最重要的任务边界">我觉得最重要的任务边界</h2>
 <p>阅读 RLSeek 时，我认为最值得区分的一点是：</p>
 <p><strong>相对于给定来源的忠实性，并不等于一般意义上的事实正确性。</strong></p>
 <p>假设系统给模型提供了一组来源材料。</p>
@@ -149,7 +127,7 @@
 <blockquote>
 <p><strong>世界事实性判断。</strong></p>
 </blockquote>
-<h2><span id="这一区分为什么重要"></span>这一区分为什么重要</h2>
+<h2 id="这一区分为什么重要">这一区分为什么重要</h2>
 <p>如果不区分这两个问题，很容易对一个幻觉检测系统的能力范围产生误解。</p>
 <p>例如，一个系统在给定证据条件下能够很好地找出不受支持的内容，并不意味着它已经具备：</p>
 <ul>
@@ -163,7 +141,7 @@
 <p><strong>检索 → 证据质量 → 生成 → 忠实性检测 → 最终验证</strong></p>
 <p>RLSeek 更接近其中“生成内容是否忠实于当前证据”这一部分。</p>
 <p>把这一层边界画清楚以后，我反而更容易理解它真正解决了什么问题。</p>
-<h2><span id="一个对我影响比较大的认识"></span>一个对我影响比较大的认识</h2>
+<h2 id="一个对我影响比较大的认识">一个对我影响比较大的认识</h2>
 <p>以前接触一个方法时，我很容易先看：</p>
 <ul>
 <li>模型结构；</li>
@@ -190,7 +168,7 @@
 <p><strong>在给定来源证据的条件下，定位待检测文本中缺乏证据支持的片段，并通过证据引用约束增强判断的可检查性。</strong></p>
 </blockquote>
 <p>这个表述比简单说“它是一个幻觉检测方法”更接近我对它的理解。</p>
-<h2><span id="当前理解范围"></span>当前理解范围</h2>
+<h2 id="当前理解范围">当前理解范围</h2>
 <p>目前这份笔记记录的是我在阅读和讨论 RLSeek 过程中形成的理解，重点包括：</p>
 <ul>
 <li>任务输入与输出；</li>
@@ -200,9 +178,4 @@
 <li>span 级评测；</li>
 <li>相对证据忠实性与一般事实性的区别。</li>
 </ul>
-<p><strong>我目前没有完成 RLSeek 的独立复现。</strong> 这里记录的是阅读形成的方法理解和问题边界，不包含个人复现实验结果。</p>
-</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#为什么读-rlseek">为什么读 RLSeek</a><a href="#任务输入与输出">任务输入与输出</a><a href="#为什么要做-span-level-检测">为什么要做 Span-level 检测</a><a href="#证据引用约束">证据引用约束</a><a href="#训练信号">训练信号</a><a href="#span-f1">Span F1</a><a href="#我觉得最重要的任务边界">我觉得最重要的任务边界</a><a href="#这一区分为什么重要">这一区分为什么重要</a><a href="#一个对我影响比较大的认识">一个对我影响比较大的认识</a><a href="#当前理解范围">当前理解范围</a></nav></details></aside></div>
-  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/research/">返回栏目 ↑</a></footer>
-</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
-<script src="/assets/site.js" defer></script>
-</body></html>
+<p><strong>我目前没有完成 RLSeek 的独立复现。</strong> 这里记录的是阅读形成的方法理解和问题边界，不包含个人复现实验结果。</p></div><aside class="toc"><details open><summary>On this page</summary><nav aria-label="文章目录"><a href="#为什么读-rlseek">为什么读 RLSeek</a><a href="#任务输入与输出">任务输入与输出</a><a href="#为什么要做-span-level-检测">为什么要做 Span-level 检测</a><a href="#证据引用约束">证据引用约束</a><a href="#训练信号">训练信号</a><a href="#span-f1">Span F1</a><a href="#我觉得最重要的任务边界">我觉得最重要的任务边界</a><a href="#这一区分为什么重要">这一区分为什么重要</a><a href="#一个对我影响比较大的认识">一个对我影响比较大的认识</a><a href="#当前理解范围">当前理解范围</a></nav></details></aside></div><nav class="article-nav" aria-label="前后文章"><span></span></nav></article><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-reading-progress]`),r=document.querySelector(`.article-shell`);if(n&&r){let e=()=>{let e=r.offsetTop,t=r.offsetHeight-innerHeight,i=Math.min(1,Math.max(0,(scrollY-e)/t));n.style.transform=`scaleX(${i})`};addEventListener(`scroll`,e,{passive:!0,signal:t}),e()}document.querySelectorAll(`.prose pre`).forEach(e=>{let n=e.querySelector(`.copy-code`)||document.createElement(`button`);n.className=`copy-code`,n.type=`button`,n.textContent=`Copy`,n.setAttribute(`aria-label`,`复制代码`),n.addEventListener(`click`,async()=>{try{await navigator.clipboard.writeText(e.querySelector(`code`)?.textContent||``),n.textContent=`Copied`}catch{n.textContent=`复制失败`}setTimeout(()=>n.textContent=`Copy`,1500)},{signal:t}),e.append(n)})};t(),document.addEventListener(`astro:page-load`,t);</script></main><footer class="site-footer" data-astro-cid-jo6i4kqk><div class="shell footer-grid" data-astro-cid-jo6i4kqk><div data-astro-cid-jo6i4kqk><a href="/" class="footer-name" data-astro-cid-jo6i4kqk>Hongyuan Zhang <span data-astro-cid-jo6i4kqk>张宏远</span></a><p data-astro-cid-jo6i4kqk>软件工程本科生 · 北京航空航天大学</p></div><div class="footer-links" data-astro-cid-jo6i4kqk><a href="/research/" data-astro-cid-jo6i4kqk>Research</a><a href="/projects/" data-astro-cid-jo6i4kqk>Projects</a><a href="/notes/" data-astro-cid-jo6i4kqk>Notes</a><a href="https://github.com/future-finder" data-astro-cid-jo6i4kqk>GitHub ↗</a><a href="/rss.xml" data-astro-cid-jo6i4kqk>RSS</a></div><p class="footer-meta" data-astro-cid-jo6i4kqk>© 2026 Hongyuan Zhang<span data-astro-cid-jo6i4kqk>保持好奇，认真求证。</span></p></div></footer><dialog class="search-dialog" data-search-dialog data-search-base="/" aria-labelledby="search-title" data-astro-cid-6xoupbfm><div class="search-panel" data-astro-cid-6xoupbfm><header data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-search"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><h2 id="search-title" class="sr-only" data-astro-cid-6xoupbfm>全文搜索</h2><input type="search" placeholder="搜索文章、笔记和项目…" autocomplete="off" data-search-input data-astro-cid-6xoupbfm><button type="button" data-search-close aria-label="关闭搜索" data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></header><div class="search-hint" data-search-hint data-astro-cid-6xoupbfm><span data-astro-cid-6xoupbfm>输入关键词开始搜索</span><kbd data-astro-cid-6xoupbfm>ESC 关闭</kbd></div><div class="search-results" data-search-results role="status" aria-live="polite" data-astro-cid-6xoupbfm></div><footer data-astro-cid-6xoupbfm><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-file-text"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg> Writing</span><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-sprout"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"></path><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"></path><path d="M5 21h14"></path></svg> Notes</span><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path><path d="M6.453 15h11.094"></path><path d="M8.5 2h7"></path></svg> Projects</span></footer></div></dialog><script type="module" src="/search.js"></script><button class="back-top" type="button" aria-label="返回页面顶部" data-back-top>↑</button><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-back-top]`);if(!n)return;let r=()=>n.toggleAttribute(`data-visible`,scrollY>700);addEventListener(`scroll`,r,{passive:!0,signal:t}),n.addEventListener(`click`,()=>scrollTo({top:0,behavior:`smooth`}),{signal:t}),r()};t(),document.addEventListener(`astro:page-load`,t);</script></body></html>

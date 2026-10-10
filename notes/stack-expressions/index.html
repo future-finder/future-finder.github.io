@@ -1,56 +1,30 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#f4f1ea">
-  <meta name="description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。">
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="用栈处理表达式：从中缀到后缀｜张宏远">
-  <meta property="og:description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。">
-  <meta property="og:site_name" content="张宏远">
-  <meta name="twitter:card" content="summary">
-  <link rel="canonical" href="https://future-finder.github.io/notes/stack-expressions/">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="alternate" type="application/rss+xml" title="张宏远 RSS" href="/rss.xml">
-  <link rel="stylesheet" href="/assets/site.css">
-  <title>用栈处理表达式：从中缀到后缀｜张宏远</title>
-</head><body>
-<a class="skip-link" href="#main">跳到主要内容</a>
-<header class="site-header">
-  <div class="shell nav-wrap">
-    <a class="brand" href="/" aria-label="张宏远首页"><span class="brand-mark">HZ</span><span><b>张宏远</b><small>Hongyuan Zhang</small></span></a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">菜单</button>
-    <nav id="site-nav" class="site-nav" aria-label="主导航"><a href="/">首页</a><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/" aria-current="page">笔记</a><a href="/about/">关于</a></nav>
-    <button class="theme-toggle" type="button" data-theme-toggle aria-label="切换明暗主题">明 / 暗</button>
-  </div>
-</header>
-<div class="reading-progress" aria-hidden="true"></div>
-<main id="main"><article class="article shell">
-  <header class="article-header"><a class="back-link" href="/notes/">← 返回笔记</a><div class="article-meta"><span>学习记录</span><span>课程学习记录</span></div><h1>用栈处理表达式：从中缀到后缀</h1><p>从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。</p><div class="tag-row"><span>数据结构</span><span>栈</span><span>表达式</span></div></header>
-  <div class="article-layout"><div class="prose"><p>学习栈的时候，我最开始对它的理解基本停留在“后进先出”。</p>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v7.2.10"><meta name="description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。"><meta name="theme-color" content="#f9fbff"><meta property="og:type" content="article"><meta property="og:title" content="用栈处理表达式：从中缀到后缀 | Hongyuan Zhang"><meta property="og:description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。"><meta property="og:site_name" content="Hongyuan Zhang"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="用栈处理表达式：从中缀到后缀 | Hongyuan Zhang"><meta name="twitter:description" content="从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。"><link rel="canonical" href="https://future-finder.github.io/notes/stack-expressions/"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="alternate" type="application/rss+xml" title="Hongyuan Zhang RSS" href="/rss.xml"><title>用栈处理表达式：从中缀到后缀 | Hongyuan Zhang</title><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"用栈处理表达式：从中缀到后缀 | Hongyuan Zhang","description":"从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。","url":"https://future-finder.github.io/notes/stack-expressions/","mainEntityOfPage":"https://future-finder.github.io/notes/stack-expressions/"}</script><script>
+      (() => {
+        const saved = localStorage.getItem('theme') || 'light';
+        const dark = saved === 'dark' || (saved === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.themePreference = saved;
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.CYDbzu1r.js"></script><style>.reading-progress{z-index:100;background:var(--accent);transform-origin:0;width:100%;height:2px;position:fixed;top:0;left:0;transform:scaleX(0)}.article-shell{padding:135px 0 80px}.article-header{border-bottom:1px solid var(--line);max-width:100%;padding-bottom:34px}.article-header h1{letter-spacing:-.025em;margin:20px 0;font-size:clamp(2rem,4vw,3.1rem);font-weight:500;line-height:1.4}.article-header>p{max-width:680px;color:var(--muted);font-size:1.1rem}.article-meta{color:var(--muted);font:10px/1 var(--font-mono);gap:20px;margin:24px 0 16px;display:flex}.article-grid{grid-template-columns:minmax(0,720px) minmax(0,220px);justify-content:space-between;gap:60px;padding-top:38px;display:grid}.toc{position:relative}.toc details{position:sticky;top:108px}.toc summary{cursor:pointer;color:var(--muted);font:10px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.1em}.toc nav{margin-top:16px;display:grid}.toc a{color:var(--muted);border-left:1px solid var(--line);padding:7px 0 7px 12px;font-size:.8rem;line-height:1.35}.toc a:hover{color:var(--accent);border-color:var(--accent)}.toc a.nested{padding-left:24px}.copy-code{color:#d7ded7;font:9px/1 var(--font-mono);cursor:pointer;background:#0006;border:1px solid #ffffff2e;border-radius:5px;padding:5px 8px;position:absolute;top:10px;right:10px}.article-nav{border-top:1px solid var(--line);grid-template-columns:1fr 1fr;gap:30px;margin-top:90px;padding-top:26px;display:grid}.article-nav a{gap:6px;display:grid}.article-nav span{color:var(--muted);font:9px/1 var(--font-mono);text-transform:uppercase}.article-nav b{font-size:.9rem}.article-nav .next{text-align:right}.related-posts{border-top:1px solid var(--ink);margin-top:70px;padding-top:28px}.related-posts h2{margin:12px 0 22px;font-size:1.4rem}.related-posts>div{grid-template-columns:repeat(3,1fr);gap:12px;display:grid}.related-posts a{border:1px solid var(--line);border-radius:8px;grid-template-rows:auto 1fr auto;min-height:150px;padding:16px;display:grid}.related-posts a:hover{border-color:var(--accent)}.related-posts small{color:var(--accent);font:9px/1 var(--font-mono)}.related-posts b{margin-top:14px;font-size:.88rem}.related-posts a>span{color:var(--muted);justify-self:end}@media (width<=980px){.article-grid{grid-template-columns:1fr;gap:30px}.toc{grid-row:1}.toc details{border:1px solid var(--line);border-radius:8px;padding:15px;position:static}}@media (width<=640px){.article-shell{padding-top:120px}.article-meta{flex-direction:column;gap:8px}.related-posts>div{grid-template-columns:1fr}}
+</style><link rel="stylesheet" href="/_astro/BaseLayout.kC-6CqB2.css"></head><body><a class="skip-link" href="#main-content">跳到主要内容</a><header class="navbar" data-navbar data-astro-cid-l7arcky5><div class="nav-inner" data-astro-cid-l7arcky5><a class="brand" href="/" aria-label="Hongyuan Zhang 首页" data-astro-cid-l7arcky5><span class="brand-name" data-astro-cid-l7arcky5>Hongyuan Zhang <small data-astro-cid-l7arcky5>张宏远</small></span></a><nav class="desktop-nav" aria-label="主导航" data-astro-cid-l7arcky5><a href="/" data-astro-cid-l7arcky5>Home</a><a href="/research" data-astro-cid-l7arcky5>Research</a><a href="/projects" data-astro-cid-l7arcky5>Projects</a><a href="/notes" aria-current="page" data-astro-cid-l7arcky5>Notes</a><a href="/about" data-astro-cid-l7arcky5>About</a></nav><div class="nav-actions" data-astro-cid-l7arcky5><button class="icon-button" type="button" data-search-open aria-label="打开全文搜索" data-astro-cid-l7arcky5><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-search"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><kbd data-astro-cid-l7arcky5>⌘K</kbd></button><button class="theme-toggle" type="button" data-theme-toggle aria-label="切换主题：浅色" title="主题：浅色" data-astro-cid-l6lhmie6><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l6lhmie6="true" class="lucide lucide-sun-moon"><path d="M12 2v2"></path><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"></path><path d="M16 12a4 4 0 0 0-4-4"></path><path d="m19 5-1.256 1.256"></path><path d="M20 12h2"></path></svg><span data-theme-label data-astro-cid-l6lhmie6>Light</span></button><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-theme-toggle]`);if(!n)return;let r=matchMedia(`(prefers-color-scheme: dark)`),i=e=>{let t=e===`dark`||e===`system`&&r.matches;document.documentElement.dataset.theme=t?`dark`:`light`,document.documentElement.dataset.themePreference=e,localStorage.setItem(`theme`,e);let i={system:`Auto`,light:`Light`,dark:`Dark`},a=n.querySelector(`[data-theme-label]`);a&&(a.textContent=i[e]),n.title=`主题：${i[e]}`,n.setAttribute(`aria-label`,`切换主题，当前：${i[e]}`),document.querySelector(`meta[name="theme-color"]`)?.setAttribute(`content`,t?`#111c2b`:`#f9fbff`)};n.addEventListener(`click`,()=>{let e=document.documentElement.dataset.themePreference||`light`;i(e===`system`?`light`:e===`light`?`dark`:`system`)},{signal:t}),r.addEventListener(`change`,()=>{document.documentElement.dataset.themePreference===`system`&&i(`system`)},{signal:t}),i(document.documentElement.dataset.themePreference||`light`)};t(),document.addEventListener(`astro:page-load`,t);</script><button class="icon-button menu-button" type="button" data-menu-toggle aria-label="打开导航菜单" aria-expanded="false" data-astro-cid-l7arcky5><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-menu menu-open"><path d="M4 5h16"></path><path d="M4 12h16"></path><path d="M4 19h16"></path></svg><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-l7arcky5="true" class="lucide lucide-x menu-close"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></div></div><nav class="mobile-nav" data-mobile-menu aria-label="移动端导航" data-astro-cid-l7arcky5><a href="/" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>01</span>Home</a><a href="/research" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>02</span>Research</a><a href="/projects" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>03</span>Projects</a><a href="/notes" aria-current="page" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>04</span>Notes</a><a href="/about" data-astro-cid-l7arcky5><span class="mono" data-astro-cid-l7arcky5>05</span>About</a></nav></header><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-navbar]`),r=document.querySelector(`[data-menu-toggle]`);if(!n||!r)return;let i=()=>n.toggleAttribute(`data-scrolled`,scrollY>24);addEventListener(`scroll`,i,{passive:!0,signal:t}),r.addEventListener(`click`,()=>{let e=!n.hasAttribute(`data-menu-open`);n.toggleAttribute(`data-menu-open`,e),r.setAttribute(`aria-expanded`,String(e)),r.setAttribute(`aria-label`,e?`关闭导航菜单`:`打开导航菜单`)},{signal:t}),n.querySelectorAll(`.mobile-nav a`).forEach(e=>e.addEventListener(`click`,()=>{n.removeAttribute(`data-menu-open`),r.setAttribute(`aria-expanded`,`false`)},{signal:t})),i()};t(),document.addEventListener(`astro:page-load`,t);</script><main id="main-content"><div class="reading-progress" data-reading-progress></div><article class="article-shell shell" data-pagefind-body><header class="article-header"><span class="eyebrow">研究笔记 · Growing / 10 MIN READ</span><h1 data-pagefind-meta="title">用栈处理表达式：从中缀到后缀</h1><p data-pagefind-meta="description">从中缀、后缀与双栈求值理解运算顺序，以及栈所保存的延迟状态。</p><div class="tag-list"><a class="tag" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a><a class="tag" href="/tags/%E6%A0%88/">栈</a><a class="tag" href="/tags/%E8%A1%A8%E8%BE%BE%E5%BC%8F/">表达式</a></div></header><div class="article-grid"><div class="prose"><p>学习栈的时候，我最开始对它的理解基本停留在“后进先出”。</p>
 <p>这个定义当然没有错，但真正开始写表达式相关的题以后，我才逐渐理解为什么栈会反复出现在这一类问题中。</p>
 <p>普通数学表达式，例如：</p>
-<pre><code class="language-text">3 + 4 * 2
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 + 4 * 2</span></span></code></pre>
 <p>不能简单地从左到右计算，因为不同运算符有不同的优先级。</p>
 <p>如果再加入括号：</p>
-<pre><code class="language-text">(3 + 4) * 2
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>(3 + 4) * 2</span></span></code></pre>
 <p>计算顺序又会发生变化。</p>
 <p>因此，表达式处理真正需要解决的问题不是“如何计算加减乘除”，而是：</p>
 <blockquote>
 <p><strong>怎样把运算顺序准确地表示出来。</strong></p>
 </blockquote>
 <p>栈正好适合保存那些“已经遇到，但暂时还不能处理”的运算符。</p>
-<h2><span id="一-中缀表达式为什么比较麻烦"></span>一、中缀表达式为什么比较麻烦</h2>
+<h2 id="一中缀表达式为什么比较麻烦">一、中缀表达式为什么比较麻烦</h2>
 <p>平时书写的表达式一般都是中缀形式：</p>
-<pre><code class="language-text">a + b * c
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a + b * c</span></span></code></pre>
 <p>运算符位于两个操作数之间。</p>
 <p>人可以直接根据优先级理解成：</p>
-<pre><code class="language-text">a + (b * c)
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a + (b * c)</span></span></code></pre>
 <p>但程序必须把这个规则明确写出来。</p>
 <p>至少需要处理：</p>
 <ul>
@@ -60,13 +34,11 @@
 <li>当前运算符和此前运算符之间的关系。</li>
 </ul>
 <p>所以中缀表达式对人比较自然，但并不是最适合程序直接计算的形式。</p>
-<h2><span id="二-后缀表达式"></span>二、后缀表达式</h2>
+<h2 id="二后缀表达式">二、后缀表达式</h2>
 <p>同一个表达式：</p>
-<pre><code class="language-text">a + b * c
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a + b * c</span></span></code></pre>
 <p>写成后缀形式是：</p>
-<pre><code class="language-text">a b c * +
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a b c * +</span></span></code></pre>
 <p>这里不再需要显式表示优先级。</p>
 <p>按照从左到右的顺序计算：</p>
 <ol>
@@ -81,82 +53,63 @@
 <blockquote>
 <p><strong>原来需要由优先级规则决定的执行顺序，被转换成了一个可以直接顺序处理的结构。</strong></p>
 </blockquote>
-<h2><span id="三-后缀表达式怎样求值"></span>三、后缀表达式怎样求值</h2>
+<h2 id="三后缀表达式怎样求值">三、后缀表达式怎样求值</h2>
 <p>后缀表达式求值比较直接，只需要一个操作数栈。</p>
 <p>例如：</p>
-<pre><code class="language-text">3 4 2 * +
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 4 2 * +</span></span></code></pre>
 <p>开始时栈为空。</p>
 <p>读到：</p>
-<pre><code class="language-text">3
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3</span></span></code></pre>
 <p>压栈：</p>
-<pre><code class="language-text">3
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3</span></span></code></pre>
 <p>读到：</p>
-<pre><code class="language-text">4
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>4</span></span></code></pre>
 <p>得到：</p>
-<pre><code class="language-text">3 4
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 4</span></span></code></pre>
 <p>再读到：</p>
-<pre><code class="language-text">2
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>2</span></span></code></pre>
 <p>得到：</p>
-<pre><code class="language-text">3 4 2
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 4 2</span></span></code></pre>
 <p>读到 <code>*</code> 时，从栈中取出两个操作数：</p>
-<pre><code class="language-text">4 * 2 = 8
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>4 * 2 = 8</span></span></code></pre>
 <p>把 8 压回栈：</p>
-<pre><code class="language-text">3 8
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 8</span></span></code></pre>
 <p>最后读到 <code>+</code>：</p>
-<pre><code class="language-text">3 + 8 = 11
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 + 8 = 11</span></span></code></pre>
 <p>最终栈中只剩：</p>
-<pre><code class="language-text">11
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>11</span></span></code></pre>
 <p>因此基本规则可以概括为：</p>
-<h3><span id="遇到操作数"></span>遇到操作数</h3>
+<h3 id="遇到操作数">遇到操作数</h3>
 <p>压栈。</p>
-<h3><span id="遇到运算符"></span>遇到运算符</h3>
+<h3 id="遇到运算符">遇到运算符</h3>
 <p>连续弹出两个操作数，完成运算，再把结果压回栈。</p>
-<h2><span id="四-一个很容易写错的地方-操作数顺序"></span>四、一个很容易写错的地方：操作数顺序</h2>
+<h2 id="四一个很容易写错的地方操作数顺序">四、一个很容易写错的地方：操作数顺序</h2>
 <p>如果运算符是：</p>
-<pre><code class="language-text">+
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>+</span></span></code></pre>
 <p>或者：</p>
-<pre><code class="language-text">*
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>*</span></span></code></pre>
 <p>交换两个操作数通常不会立即暴露问题。</p>
 <p>例如：</p>
-<pre><code class="language-text">3 + 5
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>3 + 5</span></span></code></pre>
 <p>和：</p>
-<pre><code class="language-text">5 + 3
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>5 + 3</span></span></code></pre>
 <p>结果一样。</p>
 <p>但减法和除法不满足交换律。</p>
 <p>假设栈顶依次弹出：</p>
-<pre><code class="language-text">a
-b
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a</span></span>
+<span class="line"><span>b</span></span></code></pre>
 <p>那么真正应该计算的是：</p>
-<pre><code class="language-text">b - a
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>b - a</span></span></code></pre>
 <p>而不是：</p>
-<pre><code class="language-text">a - b
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a - b</span></span></code></pre>
 <p>因此我后来更习惯明确写成：</p>
-<pre><code class="language-c">right = pop();
-left = pop();
-
-result = left - right;
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="c"><code><span class="line"><span style="color:#E6EDF3">right </span><span style="color:#FF7B72">=</span><span style="color:#D2A8FF"> pop</span><span style="color:#E6EDF3">();</span></span>
+<span class="line"><span style="color:#E6EDF3">left </span><span style="color:#FF7B72">=</span><span style="color:#D2A8FF"> pop</span><span style="color:#E6EDF3">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E6EDF3">result </span><span style="color:#FF7B72">=</span><span style="color:#E6EDF3"> left </span><span style="color:#FF7B72">-</span><span style="color:#E6EDF3"> right;</span></span></code></pre>
 <p>而不是写两个含义不清楚的临时变量。</p>
 <p>变量名本身就可以减少一部分顺序错误。</p>
-<h2><span id="五-中缀转后缀真正难在哪里"></span>五、中缀转后缀真正难在哪里</h2>
+<h2 id="五中缀转后缀真正难在哪里">五、中缀转后缀真正难在哪里</h2>
 <p>相比后缀表达式求值，中缀转后缀要复杂一些。</p>
 <p>原因是需要在扫描表达式的过程中决定：</p>
 <blockquote>
@@ -166,79 +119,65 @@ result = left - right;
 <p><strong>运算符栈。</strong></p>
 <p>如果读到操作数，可以直接加入后缀表达式。</p>
 <p>如果读到运算符，则需要和当前栈顶运算符比较优先级。</p>
-<h2><span id="六-基本处理规则"></span>六、基本处理规则</h2>
+<h2 id="六基本处理规则">六、基本处理规则</h2>
 <p>我目前使用的思路可以概括为：</p>
-<h3><span id="操作数"></span>操作数</h3>
+<h3 id="操作数">操作数</h3>
 <p>直接输出。</p>
 <p>例如读到：</p>
-<pre><code class="language-text">a
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a</span></span></code></pre>
 <p>直接放入后缀表达式。</p>
-<h3><span id="左括号"></span>左括号</h3>
+<h3 id="左括号">左括号</h3>
 <p>直接压入运算符栈。</p>
-<pre><code class="language-text">(
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>(</span></span></code></pre>
 <p>它相当于建立了一个新的优先级边界。</p>
-<h3><span id="右括号"></span>右括号</h3>
+<h3 id="右括号">右括号</h3>
 <p>不断弹出运算符并输出，直到遇到对应的左括号。</p>
 <p>最后左右括号本身都不进入后缀表达式。</p>
-<h3><span id="普通运算符"></span>普通运算符</h3>
+<h3 id="普通运算符">普通运算符</h3>
 <p>比较它和栈顶运算符的优先级。</p>
 <p>如果栈顶运算符应该先执行，就将栈顶弹出并输出。</p>
 <p>继续比较，直到当前运算符可以入栈。</p>
-<h3><span id="表达式结束"></span>表达式结束</h3>
+<h3 id="表达式结束">表达式结束</h3>
 <p>把运算符栈中剩余的运算符依次弹出。</p>
-<h2><span id="七-用一个例子走完整过程"></span>七、用一个例子走完整过程</h2>
+<h2 id="七用一个例子走完整过程">七、用一个例子走完整过程</h2>
 <p>例如：</p>
-<pre><code class="language-text">a + b * c
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a + b * c</span></span></code></pre>
 <p>读取 <code>a</code>：</p>
-<pre><code class="language-text">输出：a
-运算符栈：空
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>输出：a</span></span>
+<span class="line"><span>运算符栈：空</span></span></code></pre>
 <p>读取 <code>+</code>：</p>
-<pre><code class="language-text">输出：a
-运算符栈：+
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>输出：a</span></span>
+<span class="line"><span>运算符栈：+</span></span></code></pre>
 <p>读取 <code>b</code>：</p>
-<pre><code class="language-text">输出：a b
-运算符栈：+
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>输出：a b</span></span>
+<span class="line"><span>运算符栈：+</span></span></code></pre>
 <p>读取 <code>*</code>。</p>
 <p>因为 <code>*</code> 的优先级高于 <code>+</code>，暂时不能执行 <code>+</code>，因此：</p>
-<pre><code class="language-text">输出：a b
-运算符栈：+ *
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>输出：a b</span></span>
+<span class="line"><span>运算符栈：+ *</span></span></code></pre>
 <p>读取 <code>c</code>：</p>
-<pre><code class="language-text">输出：a b c
-运算符栈：+ *
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>输出：a b c</span></span>
+<span class="line"><span>运算符栈：+ *</span></span></code></pre>
 <p>表达式结束以后依次弹栈：</p>
-<pre><code class="language-text">a b c * +
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a b c * +</span></span></code></pre>
 <p>这就是最终的后缀表达式。</p>
-<h2><span id="八-括号的作用其实是改变-什么时候处理"></span>八、括号的作用其实是改变“什么时候处理”</h2>
+<h2 id="八括号的作用其实是改变什么时候处理">八、括号的作用其实是改变“什么时候处理”</h2>
 <p>例如：</p>
-<pre><code class="language-text">(a + b) * c
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>(a + b) * c</span></span></code></pre>
 <p>如果没有括号，<code>*</code> 会先于 <code>+</code>。</p>
 <p>但是读到左括号以后，可以把它理解成：</p>
 <blockquote>
 <p>在右括号出现以前，括号内部形成一个暂时独立的处理区域。</p>
 </blockquote>
 <p>因此：</p>
-<pre><code class="language-text">a + b
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a + b</span></span></code></pre>
 <p>会先转换成：</p>
-<pre><code class="language-text">a b +
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a b +</span></span></code></pre>
 <p>再和外部的：</p>
-<pre><code class="language-text">* c
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>* c</span></span></code></pre>
 <p>组合。</p>
 <p>最终：</p>
-<pre><code class="language-text">a b + c *
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>a b + c *</span></span></code></pre>
 <p>从程序实现角度看，括号本身不会进入最终的后缀表达式。</p>
 <p>它的作用主要是改变运算符栈的弹出时机。</p>
 <p>这个理解对我来说比单纯背：</p>
@@ -246,48 +185,41 @@ result = left - right;
 <p>左括号入栈，右括号弹栈</p>
 </blockquote>
 <p>更清楚。</p>
-<h2><span id="九-我写这类程序时会特别检查什么"></span>九、我写这类程序时会特别检查什么</h2>
+<h2 id="九我写这类程序时会特别检查什么">九、我写这类程序时会特别检查什么</h2>
 <p>表达式问题里，我比较容易出错的地方主要有下面几个。</p>
-<h3><span id="1.-数字不一定只有一位"></span>1. 数字不一定只有一位</h3>
+<h3 id="1-数字不一定只有一位">1. 数字不一定只有一位</h3>
 <p>例如：</p>
-<pre><code class="language-text">123 + 45
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>123 + 45</span></span></code></pre>
 <p>不能把：</p>
-<pre><code class="language-text">1
-2
-3
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>1</span></span>
+<span class="line"><span>2</span></span>
+<span class="line"><span>3</span></span></code></pre>
 <p>当成三个操作数。</p>
 <p>因此扫描字符串时，需要识别一个完整的数字区间。</p>
-<h3><span id="2.-负数和减号不一定是一回事"></span>2. 负数和减号不一定是一回事</h3>
+<h3 id="2-负数和减号不一定是一回事">2. 负数和减号不一定是一回事</h3>
 <p>例如：</p>
-<pre><code class="language-text">-5
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>-5</span></span></code></pre>
 <p>中的 <code>-</code> 表示负号。</p>
 <p>但：</p>
-<pre><code class="language-text">8 - 5
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>8 - 5</span></span></code></pre>
 <p>中的 <code>-</code> 是二元减法运算符。</p>
 <p>如果题目允许负数，就需要根据上下文区分二者。</p>
-<h3><span id="3.-括号是否匹配"></span>3. 括号是否匹配</h3>
+<h3 id="3-括号是否匹配">3. 括号是否匹配</h3>
 <p>出现：</p>
-<pre><code class="language-text">(
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>(</span></span></code></pre>
 <p>以后是否一定存在对应的：</p>
-<pre><code class="language-text">)
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>)</span></span></code></pre>
 <p>如果题目没有保证输入合法，就需要额外处理。</p>
-<h3><span id="4.-栈是否为空"></span>4. 栈是否为空</h3>
+<h3 id="4-栈是否为空">4. 栈是否为空</h3>
 <p>任何 <code>pop</code> 操作之前，都应该明确当前栈中是否真的存在足够的元素。</p>
 <p>后缀表达式中的一个二元运算符至少需要两个操作数。</p>
-<h3><span id="5.-表达式结束后有没有清空运算符栈"></span>5. 表达式结束后有没有清空运算符栈</h3>
+<h3 id="5-表达式结束后有没有清空运算符栈">5. 表达式结束后有没有清空运算符栈</h3>
 <p>循环读完字符并不代表转换结束。</p>
 <p>运算符栈中可能还有尚未输出的运算符。</p>
 <p>这是很容易漏掉的一步。</p>
-<h2><span id="十-双栈直接求中缀表达式"></span>十、双栈直接求中缀表达式</h2>
+<h2 id="十双栈直接求中缀表达式">十、双栈直接求中缀表达式</h2>
 <p>除了：</p>
-<pre><code class="language-text">中缀 → 后缀 → 求值
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>中缀 → 后缀 → 求值</span></span></code></pre>
 <p>还可以直接使用两个栈：</p>
 <ul>
 <li>操作数栈；</li>
@@ -308,7 +240,7 @@ result = left - right;
 <p><strong>操作数暂存，尚未到执行时机的运算符也暂存；一旦执行顺序确定，就完成一次归约。</strong></p>
 </blockquote>
 <p>只是一个先生成显式的后缀表达式，一个直接完成计算。</p>
-<h2><span id="十一-栈在这里真正保存的是什么"></span>十一、栈在这里真正保存的是什么</h2>
+<h2 id="十一栈在这里真正保存的是什么">十一、栈在这里真正保存的是什么</h2>
 <p>学完这些题以后，我对栈的理解不再只是：</p>
 <blockquote>
 <p>后进先出的数据结构。</p>
@@ -318,8 +250,7 @@ result = left - right;
 <p><strong>当前已经出现，但执行时机还没有到的状态。</strong></p>
 </blockquote>
 <p>例如运算符栈中的：</p>
-<pre><code class="language-text">+
-</code></pre>
+<pre class="astro-code github-dark-default" style="background-color:#0d1117;color:#e6edf3; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;" tabindex="0" data-language="text"><code><span class="line"><span>+</span></span></code></pre>
 <p>不是“不处理”。</p>
 <p>而是：</p>
 <blockquote>
@@ -335,7 +266,7 @@ result = left - right;
 </ul>
 <p>等很多问题中。</p>
 <p>对我来说，这比单独记住某一道表达式题的模板更有价值。</p>
-<h2><span id="当前整理"></span>当前整理</h2>
+<h2 id="当前整理">当前整理</h2>
 <p>目前我在表达式相关问题中主要练习过：</p>
 <ul>
 <li>括号匹配；</li>
@@ -352,9 +283,4 @@ result = left - right;
 <blockquote>
 <p>当前有哪些信息已经出现，但必须暂时保存，等之后某个条件满足以后再处理？</p>
 </blockquote>
-<p>这个问题往往比“这道题是不是一道栈题”更有帮助。</p>
-</div><aside class="toc"><details open><summary>本文目录</summary><nav><a href="#一-中缀表达式为什么比较麻烦">一、中缀表达式为什么比较麻烦</a><a href="#二-后缀表达式">二、后缀表达式</a><a href="#三-后缀表达式怎样求值">三、后缀表达式怎样求值</a><a href="#四-一个很容易写错的地方-操作数顺序">四、一个很容易写错的地方：操作数顺序</a><a href="#五-中缀转后缀真正难在哪里">五、中缀转后缀真正难在哪里</a><a href="#六-基本处理规则">六、基本处理规则</a><a href="#七-用一个例子走完整过程">七、用一个例子走完整过程</a><a href="#八-括号的作用其实是改变-什么时候处理">八、括号的作用其实是改变“什么时候处理”</a><a href="#九-我写这类程序时会特别检查什么">九、我写这类程序时会特别检查什么</a><a href="#十-双栈直接求中缀表达式">十、双栈直接求中缀表达式</a><a href="#十一-栈在这里真正保存的是什么">十一、栈在这里真正保存的是什么</a><a href="#当前整理">当前整理</a></nav></details></aside></div>
-  <footer class="article-footer"><p>这篇页面记录的是当时能够确认的学习或实践内容。</p><a href="/notes/">返回栏目 ↑</a></footer>
-</article></main><footer class="site-footer"><div class="shell footer-grid"><div><span class="brand-mark">HZ</span><p>一个本科生持续维护的学习、项目与研究记录。</p></div><div><a href="/research/">研究</a><a href="/projects/">项目</a><a href="/notes/">笔记</a></div><div class="footer-meta">© 2026 张宏远<br>北京航空航天大学本科生</div></div></footer>
-<script src="/assets/site.js" defer></script>
-</body></html>
+<p>这个问题往往比“这道题是不是一道栈题”更有帮助。</p></div><aside class="toc"><details open><summary>On this page</summary><nav aria-label="文章目录"><a href="#一中缀表达式为什么比较麻烦">一、中缀表达式为什么比较麻烦</a><a href="#二后缀表达式">二、后缀表达式</a><a href="#三后缀表达式怎样求值">三、后缀表达式怎样求值</a><a class="nested" href="#遇到操作数">遇到操作数</a><a class="nested" href="#遇到运算符">遇到运算符</a><a href="#四一个很容易写错的地方操作数顺序">四、一个很容易写错的地方：操作数顺序</a><a href="#五中缀转后缀真正难在哪里">五、中缀转后缀真正难在哪里</a><a href="#六基本处理规则">六、基本处理规则</a><a class="nested" href="#操作数">操作数</a><a class="nested" href="#左括号">左括号</a><a class="nested" href="#右括号">右括号</a><a class="nested" href="#普通运算符">普通运算符</a><a class="nested" href="#表达式结束">表达式结束</a><a href="#七用一个例子走完整过程">七、用一个例子走完整过程</a><a href="#八括号的作用其实是改变什么时候处理">八、括号的作用其实是改变“什么时候处理”</a><a href="#九我写这类程序时会特别检查什么">九、我写这类程序时会特别检查什么</a><a class="nested" href="#1-数字不一定只有一位">1. 数字不一定只有一位</a><a class="nested" href="#2-负数和减号不一定是一回事">2. 负数和减号不一定是一回事</a><a class="nested" href="#3-括号是否匹配">3. 括号是否匹配</a><a class="nested" href="#4-栈是否为空">4. 栈是否为空</a><a class="nested" href="#5-表达式结束后有没有清空运算符栈">5. 表达式结束后有没有清空运算符栈</a><a href="#十双栈直接求中缀表达式">十、双栈直接求中缀表达式</a><a href="#十一栈在这里真正保存的是什么">十一、栈在这里真正保存的是什么</a><a href="#当前整理">当前整理</a></nav></details></aside></div><nav class="article-nav" aria-label="前后文章"><span></span></nav></article><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-reading-progress]`),r=document.querySelector(`.article-shell`);if(n&&r){let e=()=>{let e=r.offsetTop,t=r.offsetHeight-innerHeight,i=Math.min(1,Math.max(0,(scrollY-e)/t));n.style.transform=`scaleX(${i})`};addEventListener(`scroll`,e,{passive:!0,signal:t}),e()}document.querySelectorAll(`.prose pre`).forEach(e=>{let n=e.querySelector(`.copy-code`)||document.createElement(`button`);n.className=`copy-code`,n.type=`button`,n.textContent=`Copy`,n.setAttribute(`aria-label`,`复制代码`),n.addEventListener(`click`,async()=>{try{await navigator.clipboard.writeText(e.querySelector(`code`)?.textContent||``),n.textContent=`Copied`}catch{n.textContent=`复制失败`}setTimeout(()=>n.textContent=`Copy`,1500)},{signal:t}),e.append(n)})};t(),document.addEventListener(`astro:page-load`,t);</script></main><footer class="site-footer" data-astro-cid-jo6i4kqk><div class="shell footer-grid" data-astro-cid-jo6i4kqk><div data-astro-cid-jo6i4kqk><a href="/" class="footer-name" data-astro-cid-jo6i4kqk>Hongyuan Zhang <span data-astro-cid-jo6i4kqk>张宏远</span></a><p data-astro-cid-jo6i4kqk>软件工程本科生 · 北京航空航天大学</p></div><div class="footer-links" data-astro-cid-jo6i4kqk><a href="/research/" data-astro-cid-jo6i4kqk>Research</a><a href="/projects/" data-astro-cid-jo6i4kqk>Projects</a><a href="/notes/" data-astro-cid-jo6i4kqk>Notes</a><a href="https://github.com/future-finder" data-astro-cid-jo6i4kqk>GitHub ↗</a><a href="/rss.xml" data-astro-cid-jo6i4kqk>RSS</a></div><p class="footer-meta" data-astro-cid-jo6i4kqk>© 2026 Hongyuan Zhang<span data-astro-cid-jo6i4kqk>保持好奇，认真求证。</span></p></div></footer><dialog class="search-dialog" data-search-dialog data-search-base="/" aria-labelledby="search-title" data-astro-cid-6xoupbfm><div class="search-panel" data-astro-cid-6xoupbfm><header data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-search"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><h2 id="search-title" class="sr-only" data-astro-cid-6xoupbfm>全文搜索</h2><input type="search" placeholder="搜索文章、笔记和项目…" autocomplete="off" data-search-input data-astro-cid-6xoupbfm><button type="button" data-search-close aria-label="关闭搜索" data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-x"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></header><div class="search-hint" data-search-hint data-astro-cid-6xoupbfm><span data-astro-cid-6xoupbfm>输入关键词开始搜索</span><kbd data-astro-cid-6xoupbfm>ESC 关闭</kbd></div><div class="search-results" data-search-results role="status" aria-live="polite" data-astro-cid-6xoupbfm></div><footer data-astro-cid-6xoupbfm><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-file-text"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"></path><path d="M14 2v5a1 1 0 0 0 1 1h5"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg> Writing</span><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-sprout"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"></path><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"></path><path d="M5 21h14"></path></svg> Notes</span><span data-astro-cid-6xoupbfm><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-astro-cid-6xoupbfm="true" class="lucide lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"></path><path d="M6.453 15h11.094"></path><path d="M8.5 2h7"></path></svg> Projects</span></footer></div></dialog><script type="module" src="/search.js"></script><button class="back-top" type="button" aria-label="返回页面顶部" data-back-top>↑</button><script type="module">var e,t=()=>{e?.abort(),e=new AbortController;let{signal:t}=e,n=document.querySelector(`[data-back-top]`);if(!n)return;let r=()=>n.toggleAttribute(`data-visible`,scrollY>700);addEventListener(`scroll`,r,{passive:!0,signal:t}),n.addEventListener(`click`,()=>scrollTo({top:0,behavior:`smooth`}),{signal:t}),r()};t(),document.addEventListener(`astro:page-load`,t);</script></body></html>
