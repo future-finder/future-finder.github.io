@@ -1,0 +1,38 @@
+---
+import { Search, X, FileText, Sprout, FlaskConical } from '@lucide/astro';
+---
+<dialog class="search-dialog" data-search-dialog data-search-base={import.meta.env.BASE_URL} aria-labelledby="search-title">
+  <div class="search-panel">
+    <header>
+      <Search size={20} aria-hidden="true" />
+      <h2 id="search-title" class="sr-only">全文搜索</h2>
+      <input type="search" placeholder="搜索文章、笔记和项目…" autocomplete="off" data-search-input />
+      <button type="button" data-search-close aria-label="关闭搜索"><X size={19} /></button>
+    </header>
+    <div class="search-hint" data-search-hint><span>输入关键词开始搜索</span><kbd>ESC 关闭</kbd></div>
+    <div class="search-results" data-search-results role="status" aria-live="polite"></div>
+    <footer><span><FileText size={13} /> Writing</span><span><Sprout size={13} /> Notes</span><span><FlaskConical size={13} /> Projects</span></footer>
+  </div>
+</dialog>
+
+<script is:inline type="module" src={`${import.meta.env.BASE_URL}search.js`}></script>
+
+<style>
+  .search-dialog { inset: 0; width: min(680px, calc(100% - 28px)); max-height: max-content; margin: auto; padding: 0; border: 0; border-radius: 12px; background: transparent; color: var(--ink); }
+  .search-dialog::backdrop { background: rgba(10, 13, 11, .54); backdrop-filter: blur(3px); }
+  .search-panel { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); color: var(--muted); }
+  input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 1rem; }
+  header button { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; cursor: pointer; }
+  header button:hover { background: var(--accent-soft); color: var(--accent); }
+  .search-hint { min-height: 180px; display: flex; align-items: flex-start; justify-content: space-between; padding: 24px; color: var(--muted); font-size: .82rem; }
+  .search-results { max-height: min(58vh, 520px); overflow: auto; }
+  .search-result { display: block; padding: 17px 22px; border-bottom: 1px solid var(--line); }
+  .search-result:hover { background: var(--accent-soft); }
+  .search-result span { font-weight: 600; }
+  .search-result p { margin: 5px 0 0; color: var(--muted); font-size: .84rem; line-height: 1.5; }
+  .search-loading { padding: 26px 22px; color: var(--muted); }
+  footer { display: flex; gap: 18px; padding: 11px 16px; border-top: 1px solid var(--line); color: var(--muted); font: 10px/1 var(--font-mono); }
+  footer span { display: inline-flex; align-items: center; gap: 5px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+</style>

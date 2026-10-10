@@ -1,0 +1,24 @@
+---
+import { Mail, CodeXml, ArrowUpRight } from '@lucide/astro';
+import { profile } from '@/data/profile';
+import { social } from '@/data/social';
+---
+<section class="hero shell">
+  <div class="portrait-placeholder" aria-label="山峦与自然光影">
+    {profile.avatar ? <img class="portrait" src={profile.avatar} alt="张宏远的个人肖像" width="320" height="360" /> : <><img src={`${import.meta.env.BASE_URL}visuals/landscape.svg`} alt="柔和山峦与自然光影" width="320" height="360" /><span class="portrait-initials">hz.</span><span class="portrait-caption">A space for curiosity.</span></>}
+  </div>
+  <div class="hero-copy">
+    <p class="eyebrow">BEIHANG UNIVERSITY · SOFTWARE ENGINEERING</p>
+    <p class="hello">你好，我是</p>
+    <h1>Hongyuan Zhang<span>张宏远</span></h1>
+    <p class="hero-identity">北京航空航天大学 · 软件工程专业本科生</p>
+    <p class="hero-description">探索基础模型架构、大语言模型内部机制，<br class="desktop-break" />以及注意力与记忆如何塑造智能。</p>
+    <div class="hero-links">
+      <a href={`mailto:${social.email}`}><Mail size={17}/><span>Email</span></a>
+      <a href={social.github} target="_blank" rel="noreferrer"><CodeXml size={17}/><span>GitHub</span></a>
+      <a class="hero-about" href={`${import.meta.env.BASE_URL}about/`}>更多关于我 <ArrowUpRight size={15}/></a>
+    </div>
+  </div>
+  <span class="hero-motto" aria-hidden="true">Understanding intelligence.<br/>Building with care.</span>
+</section>
+

@@ -1,0 +1,13 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { statusLabels } from '@/utils/content';
+interface Props { project: CollectionEntry<'projects'>; }
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const href = project.data.status === 'reproduction' ? `${base}research/lettucedetect/` : `${base}projects/${project.id}/`;
+const visual = project.data.visual || 'evaluation';
+---
+<article class="project-card" data-project-status={project.data.status}>
+  <a class="project-image" href={href} aria-label={`查看 ${project.data.shortTitle || project.data.title}`}><picture><source media="(max-width: 540px)" srcset={`${base}visuals/${visual}-mobile.svg`}/><img src={`${base}visuals/${visual}.svg`} alt={visual === 'speech' ? '语音练习、识别与反馈的功能流程' : visual === 'memory' ? '结构化状态与长期记忆的架构设计' : 'LettuceDetect 复现实验的 F1 图表'} width="720" height="420" loading="lazy"/></picture><span class="visual-caption">{visual === 'evaluation' ? '实验结果 / F1' : '功能与架构示意'}</span></a>
+  <div class="project-body"><div class="project-meta"><span>{project.data.type}</span><span class="project-status">{statusLabels[project.data.status]}{project.id === 'eloveris' ? ' · 早期版本' : ''}</span></div><h3><a href={href}>{project.data.shortTitle || project.data.title}</a></h3><p>{project.data.description}</p><div class="project-bottom"><span>{project.data.tags.slice(0,3).join(' · ')}</span><a href={href} aria-label={`阅读 ${project.data.shortTitle || project.data.title}`} class="round-arrow">↗</a></div></div>
+</article>

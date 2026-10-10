@@ -1,0 +1,7 @@
+/* Responsive steps: compact 540px, tablet 767px, desktop 1000px. CSS variables cannot be used in native media queries. */
+:root {
+ color-scheme:light; --canvas:#f9fbff; --surface:#fff; --ink:#101d43; --muted:#536384; --line:#e6edf7; --accent:#1558d6; --accent-soft:#edf4ff; --header:rgba(249,251,255,.96); --shadow:0 8px 28px rgba(25,61,115,.035); --shadow-hover:0 12px 34px rgba(25,61,115,.075); --radius:8px; --radius-small:4px;
+ --font-sans:"IBM Plex Sans","PingFang SC","Microsoft YaHei",sans-serif; --font-serif:"Source Serif 4","Noto Serif SC","Songti SC","SimSun",serif; --font-mono:"JetBrains Mono",Consolas,monospace;
+ --space-1:8px; --space-2:16px; --space-3:24px; --space-4:32px; --space-5:48px; --space-6:64px; --content-width:1120px; --reading-width:720px;
+}
+:root[data-theme="dark"] {color-scheme:dark;--canvas:#111c2b;--surface:#162335;--ink:#e4ecf7;--muted:#a1b0c4;--line:#2b3c51;--accent:#92b9ee;--accent-soft:#203651;--header:rgba(17,28,43,.96);--shadow:0 10px 32px #0002;--shadow-hover:0 14px 38px #0004;}

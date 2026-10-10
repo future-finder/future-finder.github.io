@@ -1,0 +1,9 @@
+---
+
+import { social } from '@/data/social';
+const base = import.meta.env.BASE_URL;
+---
+<footer class="site-footer"><div class="shell footer-grid"><div><a href={base} class="footer-name">Hongyuan Zhang <span>张宏远</span></a><p>软件工程本科生 · 北京航空航天大学</p></div><div class="footer-links"><a href={`${base}research/`}>Research</a><a href={`${base}projects/`}>Projects</a><a href={`${base}notes/`}>Notes</a><a href={social.github}>GitHub ↗</a><a href={social.rss}>RSS</a></div><p class="footer-meta">© 2026 Hongyuan Zhang<span>保持好奇，认真求证。</span></p></div></footer>
+<style>
+.site-footer{border-top:1px solid var(--line);padding:28px 0;background:var(--surface)}.footer-grid{display:grid;grid-template-columns:1fr auto;gap:18px 30px;align-items:center}.footer-name{font:500 16px/1.4 var(--font-serif)}.footer-name span{font-size:11px;margin-left:10px;color:var(--muted)}p{font-size:10px;color:var(--muted);margin:7px 0 0}.footer-links{display:flex;gap:20px;font-size:10px;color:var(--muted)}.footer-meta{grid-column:1/-1;display:flex;justify-content:space-between;font-size:9px;border-top:1px solid var(--line);padding-top:17px;margin-top:0}@media(max-width:640px){.footer-grid{grid-template-columns:1fr;gap:17px}.footer-links{gap:21px;flex-wrap:wrap}.footer-meta{font-size:9px}}
+</style>

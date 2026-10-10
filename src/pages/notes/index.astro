@@ -1,0 +1,12 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+const notes = await getCollection('notes');
+const base = import.meta.env.BASE_URL;
+---
+<BaseLayout title="Notes | Hongyuan Zhang" description="程序设计、数据结构与论文阅读中的学习记录。">
+<header class="page-hero shell"><span class="eyebrow">NOTES & WRITING</span><h1>Thinking, in writing.</h1><p>记录理解的过程，也记录仍未解决的问题。程序设计、数据结构与研究阅读中的可复用方法。</p></header>
+<section class="section"><div class="shell notes-layout"><aside><span class="eyebrow">LEARNING NOTES</span><p>学习笔记</p><a href={`${base}research/`}>论文阅读 →</a><a href={`${base}blog/`}>文章归档 →</a></aside><div class="notes-list">{notes.map((note,index) => <article><span class="note-index">{String(index+1).padStart(2,'0')}</span><div><small>{note.data.dateLabel || '学习记录'} · {note.data.tags.join(' / ')}</small><h2><a href={`${base}notes/${note.id}/`}>{note.data.title}</a></h2><p>{note.data.description}</p><a class="text-link" href={`${base}notes/${note.id}/`}>继续阅读 ↗</a></div></article>)}</div></div></section>
+</BaseLayout>
+<style>.notes-layout{display:grid;grid-template-columns:200px 1fr;gap:60px}.notes-layout aside{border-right:1px solid var(--line)}.notes-layout aside>p{font:24px/1.4 var(--font-serif);margin:12px 0 28px}.notes-layout aside>a{display:block;font-size:12px;color:var(--muted);margin:12px 0}.notes-list article{display:grid;grid-template-columns:34px 1fr;gap:22px;border-bottom:1px solid var(--line);padding:0 0 30px;margin-bottom:30px}.note-index{font:10px/1.8 var(--font-mono);color:var(--muted)}small{font-size:10px;color:var(--muted)}h2{font:500 23px/1.6 var(--font-serif);margin:10px 0}p{font-size:13px;color:var(--muted);margin:0 0 16px}@media(max-width:768px){.notes-layout{grid-template-columns:1fr;gap:35px}.notes-layout aside{border:0;border-bottom:1px solid var(--line);padding-bottom:15px}.notes-layout aside>a{display:inline-block;margin:0 20px 0 0}.notes-layout aside>p{margin-bottom:16px}}@media(max-width:540px){h2{font-size:20px}.notes-list article{gap:12px;grid-template-columns:22px 1fr}}
+</style>

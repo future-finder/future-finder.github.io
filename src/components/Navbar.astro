@@ -1,0 +1,63 @@
+---
+import { Search, Menu, X } from '@lucide/astro';
+import ThemeToggle from './ThemeToggle.astro';
+const pathname = Astro.url.pathname;
+const links = [
+  ['Home', '/'], ['Research', '/research'],   ['Projects', '/projects'], ['Notes', '/notes'], ['About', '/about'],
+];
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const hrefFor = (path: string) => `${base}${path}` || '/';
+const active = (path: string) => path === '/' ? pathname.replace(/\/$/, '') === hrefFor('/').replace(/\/$/, '') : pathname.startsWith(hrefFor(path));
+---
+
+<header class="navbar" data-navbar>
+  <div class="nav-inner">
+    <a class="brand" href={hrefFor('/')} aria-label="Hongyuan Zhang 首页">
+      <span class="brand-name">Hongyuan Zhang <small>张宏远</small></span>
+    </a>
+    <nav class="desktop-nav" aria-label="主导航">
+      {links.map(([label, path]) => <a href={hrefFor(path)} aria-current={active(path) ? 'page' : undefined}>{label}</a>)}
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-button" type="button" data-search-open aria-label="打开全文搜索"><Search size={17} stroke-width={1.7} /><kbd>⌘K</kbd></button>
+      <ThemeToggle />
+      <button class="icon-button menu-button" type="button" data-menu-toggle aria-label="打开导航菜单" aria-expanded="false"><Menu class="menu-open" size={20} /><X class="menu-close" size={20} /></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" data-mobile-menu aria-label="移动端导航">
+    {links.map(([label, path], index) => <a href={hrefFor(path)} aria-current={active(path) ? 'page' : undefined}><span class="mono">0{index + 1}</span>{label}</a>)}
+  </nav>
+</header>
+
+<script>
+  let navController: AbortController | undefined;
+  const bindNav = () => {
+    navController?.abort();
+    navController = new AbortController();
+    const { signal } = navController;
+    const nav = document.querySelector<HTMLElement>('[data-navbar]');
+    const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    if (!nav || !toggle) return;
+    const onScroll = () => nav.toggleAttribute('data-scrolled', scrollY > 24);
+    addEventListener('scroll', onScroll, { passive: true, signal });
+    toggle.addEventListener('click', () => {
+      const open = !nav.hasAttribute('data-menu-open');
+      nav.toggleAttribute('data-menu-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', open ? '关闭导航菜单' : '打开导航菜单');
+    }, { signal });
+    nav.querySelectorAll('.mobile-nav a').forEach((link) => link.addEventListener('click', () => {
+      nav.removeAttribute('data-menu-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }, { signal }));
+    onScroll();
+  };
+  bindNav();
+  document.addEventListener('astro:page-load', bindNav);
+</script>
+
+<style>
+.navbar{position:fixed;inset:0 0 auto;z-index:80;background:var(--header);border-bottom:1px solid var(--line)}.nav-inner{width:min(var(--content-width),calc(100% - 64px));height:72px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:30px}.brand-name{font:500 20px/1.3 var(--font-serif);letter-spacing:-.02em;white-space:nowrap}.brand-name small{font-family:var(--font-serif);font-size:12px;margin-left:12px;color:var(--muted);letter-spacing:.04em}.desktop-nav{display:flex;gap:27px;align-items:center;margin-left:auto}.desktop-nav a{position:relative;font-size:12px;color:var(--muted)}.desktop-nav a::after{content:"";position:absolute;inset:auto 0 -12px;height:1.5px;background:var(--accent);transform:scaleX(0);transition:transform .2s}.desktop-nav a:hover,.desktop-nav a[aria-current="page"]{color:var(--accent)}.desktop-nav a[aria-current="page"]::after{transform:scaleX(1)}.nav-actions{display:flex;align-items:center;gap:6px}.icon-button{width:34px;height:34px;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:4px;cursor:pointer}.icon-button:hover{background:var(--accent-soft);color:var(--accent)}kbd{display:none}.menu-button,.menu-close,.mobile-nav{display:none}
+@media(max-width:900px){.nav-inner{gap:15px}.desktop-nav{gap:18px}.brand-name{font-size:18px}.brand-name small{display:none}}
+@media(max-width:700px){.nav-inner{width:calc(100% - 40px);height:64px}.desktop-nav{display:none}.brand-name{font-size:19px}.menu-button{display:inline-flex}.navbar[data-menu-open] .menu-open{display:none}.navbar[data-menu-open] .menu-close{display:block}.navbar[data-menu-open] .mobile-nav{display:grid;width:calc(100% - 40px);margin:auto;padding:8px 0 20px;grid-template-columns:1fr}.mobile-nav a{display:flex;align-items:center;gap:18px;font-size:16px;padding:11px 0;border-bottom:1px solid var(--line)}.mobile-nav .mono{font-size:10px;color:var(--muted)}.mobile-nav [aria-current="page"]{color:var(--accent)}}
+</style>

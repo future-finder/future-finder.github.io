@@ -1,0 +1,15 @@
+export const profile = {
+  name: '张宏远',
+  englishName: 'Hongyuan Zhang',
+  monogram: 'HZ',
+  university: '北京航空航天大学',
+  universityEn: 'Beihang University',
+  role: '软件工程专业本科生',
+  roleEn: 'Undergraduate in Software Engineering',
+  identity: '个人主页',
+  tagline: '人工智能、可靠性与智能系统。',
+  taglineEn: 'Artificial intelligence, reliability, and intelligent systems.',
+  intro: '我是张宏远，北京航空航天大学软件工程专业本科生。我关注基础模型架构、大语言模型内部机制，以及注意力与记忆机制，通过论文阅读、实验复现和系统实践逐步探索这些问题。',
+  weightedAverage: null as number | null,
+  avatar: '',
+} as const;

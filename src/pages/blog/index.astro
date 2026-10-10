@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PostCard from '@/components/PostCard.astro';
+const allPosts = (await getCollection('blog')).filter((post) => !post.data.draft).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const posts = allPosts.slice(0, 8);
+const totalPages = Math.ceil(allPosts.length / 8);
+const categories = [...new Set(allPosts.map((post) => post.data.category))];
+---
+<BaseLayout title="Writing | Hongyuan Zhang" description="研究、论文阅读、算法与工程写作。">
+  <header class="page-hero shell"><span class="eyebrow">写作</span><h1>文章</h1><p>记录阅读、项目与学习。</p></header>
+  <section class="section"><div class="shell writing-layout"><aside><span class="eyebrow">分类</span><div>{categories.map((category) => <a href={`${import.meta.env.BASE_URL}categories/${encodeURIComponent(category)}/`}>{category}</a>)}</div><a href={`${import.meta.env.BASE_URL}categories/`}>全部分类 ↗</a><a href={`${import.meta.env.BASE_URL}archives/`}>归档 ↗</a><a href={`${import.meta.env.BASE_URL}tags/`}>标签 ↗</a></aside><div>{posts.length ? posts.map((post) => <PostCard post={post} />) : <div class="empty-state">暂无文章。</div>}{totalPages > 1 && <nav class="pager" aria-label="文章分页"><span>01 / {String(totalPages).padStart(2, '0')}</span><a href={`${import.meta.env.BASE_URL}blog/page/2/`}>下一页 →</a></nav>}</div></div></section>
+</BaseLayout>
+<style>
+  .writing-layout { display: grid; grid-template-columns: 180px 1fr; gap: 70px; }
+  aside { padding-top: 28px; border-top: 1px solid var(--ink); display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+  aside div { display: grid; gap: 7px; margin: 16px 0 24px; color: var(--muted); font-size: .8rem; }
+  aside a { color: var(--accent); font-size: .8rem; }
+  .pager { margin-top: 36px; padding-top: 18px; border-top: 1px solid var(--ink); display: flex; justify-content: space-between; font: 10px/1 var(--font-mono); }
+  @media (max-width: 700px) { .writing-layout { grid-template-columns: 1fr; gap: 28px; } aside div { display: flex; flex-wrap: wrap; } }
+</style>

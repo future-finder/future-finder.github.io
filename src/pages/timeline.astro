@@ -1,0 +1,9 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import TimelineList from '@/components/TimelineList.astro';
+---
+<BaseLayout title="Timeline | Hongyuan Zhang" description="张宏远的学习与研究成长时间轴。">
+  <header class="page-hero shell"><span class="eyebrow">时间线</span><h1>时间线</h1><p>学习与项目记录。</p></header>
+  <section class="section"><div class="shell timeline-wrap"><TimelineList /></div></section>
+</BaseLayout>
+<style>.timeline-wrap { max-width: 820px; }</style>

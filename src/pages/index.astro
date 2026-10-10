@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Hero from '@/components/Hero.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import { news } from '@/data/news';
+import { researchInterests } from '@/data/research';
+const base = import.meta.env.BASE_URL;
+const projects = (await getCollection('projects')).filter(p => p.data.featured && p.data.status !== 'reproduction').sort((a,b) => a.id.localeCompare(b.id));
+const notes = await getCollection('notes');
+---
+<BaseLayout>
+  <Hero />
+  <div class="shell home-content">
+    <section class="news-panel" aria-labelledby="news-heading">
+      <div class="compact-heading"><h2 id="news-heading">Recent News <span>最近进展</span></h2><a href={`${base}timeline/`}>完整经历 <span>→</span></a></div>
+      <ol class="news-list">{news.map(item => <li><time>{item.date}</time><span class="news-dot"></span><a href={`${base}${item.href}`}>{item.text}</a></li>)}</ol>
+    </section>
+    <section class="home-section" aria-labelledby="work-heading">
+      <div class="section-heading"><div><p class="eyebrow">RESEARCH & ENGINEERING</p><h2 id="work-heading">Selected Work <span>精选实践</span></h2></div><a class="text-link" href={`${base}research/`}>研究记录 →</a></div>
+      <article class="research-feature">
+        <a class="research-visual" href={`${base}research/lettucedetect/`} aria-label="查看 LettuceDetect 复现实验"><picture><source media="(max-width: 540px)" srcset={`${base}visuals/evaluation-mobile.svg`}/><img src={`${base}visuals/evaluation.svg`} alt="Example-level F1 0.7674，Span-level F1 0.5559，2700 条测试样本" width="720" height="420" loading="lazy"/></picture></a>
+        <div class="research-feature-copy"><span class="work-kind">REPRODUCTION & EVALUATION · 2026.08</span><h3><a href={`${base}research/lettucedetect/`}>LettuceDetect</a></h3><p class="work-subtitle">RAG 场景下的细粒度幻觉检测</p><p class="work-description">基于 ModernBERT-base，在 RAGTruth 上复现训练与评测流程，分析样本级检测与片段级定位的表现。</p><div class="metric-row"><div><strong>2,700</strong><span>测试样本</span></div><div><strong>0.7674</strong><span>Example F1</span></div><div><strong>0.5559</strong><span>Span F1</span></div></div><a class="text-link" href={`${base}research/lettucedetect/`}>阅读实验报告 <span>↗</span></a></div>
+      </article>
+      <div class="home-project-grid">{projects.map(project => <ProjectCard project={project}/>)}</div>
+    </section>
+    <section class="home-section interests-block"><div class="section-heading"><div><p class="eyebrow">QUESTIONS I CARE ABOUT</p><h2>Research Interests <span>研究兴趣</span></h2></div></div><div class="interest-grid">{researchInterests.map(item => <article><span class="interest-number">{item.id}</span><h3>{item.title}</h3><p>{item.description}</p></article>)}</div></section>
+    <div class="home-bottom-grid">
+      <section class="home-section"><div class="section-heading"><h2>Notes & Reading <span>笔记与阅读</span></h2><a class="text-link" href={`${base}notes/`}>全部 →</a></div><div class="editorial-list">{notes.map(note => <a href={`${base}notes/${note.id}/`}><span>{note.data.tags[0]}</span><h3>{note.data.title}</h3><span class="list-arrow">↗</span></a>)}</div><a class="reading-link" href={`${base}research/ragtruth/`}>论文阅读 · 理解 RAGTruth：任务、标注与评测粒度 →</a></section>
+      <section class="home-section experience-preview"><div class="section-heading"><h2>Experience <span>经历</span></h2></div><div class="academic-entry"><time>2025.09 — 至今</time><h3>软件工程 · 本科</h3><p>北京航空航天大学软件学院</p></div><a class="text-link" href={`${base}about/`}>教育与个人经历 →</a></section>
+    </div>
+    <section class="closing-note"><span class="eyebrow">CURIOSITY & CRAFT</span><p>从理解一个问题，到做出可信的实验。<br/><span>在学习中保持好奇，在实践中认真求证。</span></p><a href={`mailto:25373589@buaa.edu.cn`}>保持联系 ↗</a></section>
+  </div>
+</BaseLayout>
